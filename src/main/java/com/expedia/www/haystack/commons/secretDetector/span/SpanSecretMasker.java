@@ -118,8 +118,12 @@ public class SpanSecretMasker extends DetectorBase implements ValueMapper<Span, 
     private static BuildersForTags prepareForBuild(Span span,
                                                    Tag tag,
                                                    BuildersForTags buildersForTags) {
-        final BuildersForTags buildersForTagsToUseForBuildCalls =
-                (buildersForTags == null) ? new BuildersForTags() : buildersForTags;
+        final BuildersForTags buildersForTagsToUseForBuildCalls;
+        if(buildersForTags == null) {
+            buildersForTagsToUseForBuildCalls = new BuildersForTags();
+        } else {
+            buildersForTagsToUseForBuildCalls = buildersForTags;
+        }
         if (buildersForTagsToUseForBuildCalls.spanBuilder == null) {
             buildersForTagsToUseForBuildCalls.spanBuilder = Span.newBuilder();
             buildersForTagsToUseForBuildCalls.spanBuilder.mergeFrom(span);
@@ -172,13 +176,23 @@ public class SpanSecretMasker extends DetectorBase implements ValueMapper<Span, 
                                                         Log log,
                                                         BuildersForLogFields buildersForLogFields) {
         final BuildersForLogFields buildersForLogFieldsToUseForBuildCalls =
-                (buildersForLogFields == null) ? new BuildersForLogFields() : buildersForLogFields;
+                createBuildersForLogFieldsIfNull(buildersForLogFields);
         if (buildersForLogFieldsToUseForBuildCalls.spanBuilder == null) {
             buildersForLogFieldsToUseForBuildCalls.spanBuilder = Span.newBuilder();
             buildersForLogFieldsToUseForBuildCalls.spanBuilder.mergeFrom(span);
         }
         buildersForLogFieldsToUseForBuildCalls.logBuilder = mergeLogIntoNewLogBuilder(log);
         buildersForLogFieldsToUseForBuildCalls.tagBuilder = mergeTagIntoNewTagBuilder(tag);
+        return buildersForLogFieldsToUseForBuildCalls;
+    }
+
+    private static BuildersForLogFields createBuildersForLogFieldsIfNull(BuildersForLogFields buildersForLogFields) {
+        final BuildersForLogFields buildersForLogFieldsToUseForBuildCalls;
+        if(buildersForLogFields == null) {
+            buildersForLogFieldsToUseForBuildCalls = new BuildersForLogFields();
+        } else {
+            buildersForLogFieldsToUseForBuildCalls = buildersForLogFields;
+        }
         return buildersForLogFieldsToUseForBuildCalls;
     }
 

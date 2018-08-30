@@ -88,7 +88,7 @@ public abstract class S3ConfigFetcherBase {
      * Reads a line from S3 and transforms it to an appropriate subclass of WhiteListItemBase
      *
      * @param reader the reader
-     * @return a non-null WhiteListItemBase if the read was successful, else null (which indicates all lines have been read)
+     * @return a non-null WhiteListItemBase if the read was successful, else null to indicate all lines have been read
      * @throws IOException                        if a problem occurs reading from S3
      * @throws InvalidWhitelistItemInputException if an input line in the S3 file is not formatted properly
      */

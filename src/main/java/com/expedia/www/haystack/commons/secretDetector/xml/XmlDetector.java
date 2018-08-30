@@ -85,11 +85,10 @@ public class XmlDetector extends DetectorBase {
 
     private void findSecretsInChildNodes(Node node, Map<String, List<String>> mapOfTypeToKeysOfSecrets) {
         final NodeList childNodes = node.getChildNodes();
-        if (childNodes != null) {
-            for (int index = 0; index < childNodes.getLength(); index++) {
-                final Node childNode = childNodes.item(index);
-                findSecrets(childNode, mapOfTypeToKeysOfSecrets);
-            }
+        // childNodes never null: JavaDoc says "If there are no children, this is a NodeList containing no nodes"
+        for (int index = 0; index < childNodes.getLength(); index++) {
+            final Node childNode = childNodes.item(index);
+            findSecrets(childNode, mapOfTypeToKeysOfSecrets);
         }
     }
 
@@ -112,26 +111,4 @@ public class XmlDetector extends DetectorBase {
         } while (node != null);
         return String.join("/", nodeList.toArray(ZERO_LENGTH_STRING_ARRAY));
     }
-/*
-    @SuppressWarnings("MethodWithMultipleLoops")
-    @Override
-    public Iterable<String> apply(@SuppressWarnings("ParameterNameDiffersFromOverriddenParameter") Document document) {
-        final Map<String, List<String>> mapOfTypeToKeysOfSecrets = findSecrets(document);
-        if (mapOfTypeToKeysOfSecrets.isEmpty()) {
-            return Collections.emptyList();
-        }
-        final String emailText = getEmailText(mapOfTypeToKeysOfSecrets);
-        final Iterator<Map.Entry<String, List<String>>> firstLevelIterator = mapOfTypeToKeysOfSecrets.entrySet().iterator();
-        while (firstLevelIterator.hasNext()) {
-            final Map.Entry<String, List<String>> finderNameToKeysOfSecrets = firstLevelIterator.next();
-            final String finderName = finderNameToKeysOfSecrets.getKey();
-            final List<String> xmlPaths = finderNameToKeysOfSecrets.getValue();
-            xmlPaths.removeIf(xmlPath -> s3ConfigFetcher.isInWhiteList(finderName, xmlPath));
-            if (xmlPaths.isEmpty()) {
-                firstLevelIterator.remove();
-            }
-        }
-        return mapOfTypeToKeysOfSecrets.isEmpty() ? Collections.emptyList() : Collections.singleton(emailText);
-    }
-*/
 }

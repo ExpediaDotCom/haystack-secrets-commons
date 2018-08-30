@@ -1,3 +1,19 @@
+/*
+ * Copyright 2018 Expedia, Inc.
+ *
+ *       Licensed under the Apache License, Version 2.0 (the "License");
+ *       you may not use this file except in compliance with the License.
+ *       You may obtain a copy of the License at
+ *
+ *           http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *       Unless required by applicable law or agreed to in writing, software
+ *       distributed under the License is distributed on an "AS IS" BASIS,
+ *       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *       See the License for the specific language governing permissions and
+ *       limitations under the License.
+ *
+ */
 package com.expedia.www.haystack.commons.secretDetector.json;
 
 import com.expedia.www.haystack.commons.secretDetector.DetectorBase;
@@ -52,7 +68,9 @@ public class JsonDetector extends DetectorBase {
         return mapOfTypeToKeysOfSecrets;
     }
 
-    private void handleJsonObject(Map<String, List<String>> mapOfTypeToKeysOfSecrets, LinkedList<Object> ids, JsonObject childJsonObject) {
+    private void handleJsonObject(Map<String, List<String>> mapOfTypeToKeysOfSecrets,
+                                  LinkedList<Object> ids,
+                                  JsonObject childJsonObject) {
         for (Map.Entry<String, JsonElement> entry : childJsonObject.entrySet()) {
             ids.push(entry.getKey());
             findSecrets(entry.getValue(), mapOfTypeToKeysOfSecrets, ids);
@@ -60,7 +78,9 @@ public class JsonDetector extends DetectorBase {
         }
     }
 
-    private void handleJsonArray(Map<String, List<String>> mapOfTypeToKeysOfSecrets, LinkedList<Object> ids, JsonArray jsonArray) {
+    private void handleJsonArray(Map<String, List<String>> mapOfTypeToKeysOfSecrets,
+                                 LinkedList<Object> ids,
+                                 JsonArray jsonArray) {
         int childJsonElementIndex = 0;
         for (final JsonElement childJsonElement : jsonArray) {
             //noinspection ValueOfIncrementOrDecrementUsed
@@ -70,7 +90,9 @@ public class JsonDetector extends DetectorBase {
         }
     }
 
-    private void handleJsonPrimitive(Map<String, List<String>> mapOfTypeToKeysOfSecrets, Deque<Object> ids, JsonPrimitive value) {
+    private void handleJsonPrimitive(Map<String, List<String>> mapOfTypeToKeysOfSecrets,
+                                     Deque<Object> ids,
+                                     JsonPrimitive value) {
         if (value.isString()) {
             final Map<String, List<String>> secrets = finderEngine.findWithType(value.getAsString());
             if (!secrets.isEmpty()) {
