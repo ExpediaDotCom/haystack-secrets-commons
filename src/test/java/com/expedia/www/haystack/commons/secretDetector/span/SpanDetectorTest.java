@@ -16,7 +16,6 @@
  */
 package com.expedia.www.haystack.commons.secretDetector.span;
 
-import com.expedia.open.tracing.Span;
 import com.expedia.www.haystack.commons.secretDetector.FinderNameAndServiceName;
 import com.expedia.www.haystack.commons.secretDetector.NonLocalIpV4AddressFinder;
 import com.expedia.www.haystack.commons.secretDetector.TestConstantsAndCommonCode;
@@ -42,17 +41,15 @@ import static com.expedia.www.haystack.commons.secretDetector.TestConstantsAndCo
 import static com.expedia.www.haystack.commons.secretDetector.TestConstantsAndCommonCode.CREDIT_CARD_LOG_SPAN;
 import static com.expedia.www.haystack.commons.secretDetector.TestConstantsAndCommonCode.EMAIL_ADDRESS_IN_TAG_BYTES_AND_LOG_BYTES_SPAN;
 import static com.expedia.www.haystack.commons.secretDetector.TestConstantsAndCommonCode.EMAIL_ADDRESS_LOG_SPAN;
+import static com.expedia.www.haystack.commons.secretDetector.TestConstantsAndCommonCode.EMAIL_ADDRESS_LOG_SPAN_TAG_AND_VBYTES;
 import static com.expedia.www.haystack.commons.secretDetector.TestConstantsAndCommonCode.EMAIL_ADDRESS_SPAN;
 import static com.expedia.www.haystack.commons.secretDetector.TestConstantsAndCommonCode.FULLY_POPULATED_SPAN;
 import static com.expedia.www.haystack.commons.secretDetector.TestConstantsAndCommonCode.IP_ADDRESS;
 import static com.expedia.www.haystack.commons.secretDetector.TestConstantsAndCommonCode.IP_ADDRESS_SPAN;
-import static com.expedia.www.haystack.commons.secretDetector.TestConstantsAndCommonCode.JSON_SPAN_STRING;
 import static com.expedia.www.haystack.commons.secretDetector.TestConstantsAndCommonCode.OPERATION_NAME;
 import static com.expedia.www.haystack.commons.secretDetector.TestConstantsAndCommonCode.RANDOM;
 import static com.expedia.www.haystack.commons.secretDetector.TestConstantsAndCommonCode.STRING_FIELD_KEY;
-import static com.expedia.www.haystack.commons.secretDetector.TestConstantsAndCommonCode.STRING_FIELD_VALUE;
 import static com.expedia.www.haystack.commons.secretDetector.TestConstantsAndCommonCode.STRING_TAG_KEY;
-import static com.expedia.www.haystack.commons.secretDetector.TestConstantsAndCommonCode.buildSpan;
 import static com.expedia.www.haystack.commons.secretDetector.span.SpanDetector.COUNTER_NAME;
 import static com.expedia.www.haystack.commons.secretDetector.span.SpanDetector.ERRORS_METRIC_GROUP;
 import static com.expedia.www.haystack.commons.secretDetector.span.SpanDetector.FINDERS_TO_LOG;
@@ -78,7 +75,8 @@ public class SpanDetectorTest {
     private static final String CREDIT_CARD_FINDER_NAME = "Credit_Card";
     private static final String CREDIT_CARD_FINDER_NAME_IN_FINDERS_DEFAULT_DOT_XML = CREDIT_CARD_FINDER_NAME;
     private static final String EMAIL_FINDER_NAME_IN_FINDERS_DEFAULT_DOT_XML = "Email";
-    private static final String IP_FINDER_NAME = NonLocalIpV4AddressFinder.class.getSimpleName().replace("Finder", "");
+    private static final String IP_FINDER_NAME = NonLocalIpV4AddressFinder.class.getSimpleName()
+            .replace("Finder", "");
     private static final FinderNameAndServiceName FINDER_NAME_AND_SERVICE_NAME
             = new FinderNameAndServiceName(FINDER_NAME, SERVICE_NAME);
 
@@ -140,17 +138,20 @@ public class SpanDetectorTest {
     @Test
     public void testFindSecretsHaystackEmailAddressInLog() {
         when(mockFactory.createCounter(any(), anyString())).thenReturn(mockCounter);
-        final Map<String, List<String>> secrets = spanDetector.findSecrets(EMAIL_ADDRESS_LOG_SPAN);
+        final Map<String, List<String>> secrets = spanDetector.findSecrets(EMAIL_ADDRESS_LOG_SPAN_TAG_AND_VBYTES);
 
-        verifyHaystackEmailAddressFound(secrets, STRING_FIELD_KEY);
+        verifyHaystackEmailAddressFound(secrets, BYTES_TAG_KEY, STRING_FIELD_KEY, BYTES_FIELD_KEY);
     }
 
-    private static void verifyHaystackEmailAddressFound(Map<String, List<String>> secrets, String keyOfSecret) {
+    private static void verifyHaystackEmailAddressFound(Map<String, List<String>> secrets, String... keysOfSecret) {
         assertEquals(1, secrets.size());
         assertEquals(EMAIL_FINDER_NAME_IN_FINDERS_DEFAULT_DOT_XML, secrets.keySet().iterator().next());
         final List<String> strings = secrets.get(EMAIL_FINDER_NAME_IN_FINDERS_DEFAULT_DOT_XML);
-        assertEquals(1, strings.size());
-        assertEquals(keyOfSecret, strings.iterator().next());
+        assertEquals(keysOfSecret.length, strings.size());
+        final Iterator<String> iterator = strings.iterator();
+        for (String keyOfSecret : keysOfSecret) {
+            assertEquals(keyOfSecret, iterator.next());
+        }
     }
 
     @Test

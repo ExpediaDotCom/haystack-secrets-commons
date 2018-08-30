@@ -135,9 +135,7 @@ public class SpanS3ConfigFetcherTest {
     public void testGetWhiteListItemsOneMillisecondEarly() {
         when(mockFactory.createCurrentTimeMillis()).thenReturn(ONE_HOUR);
 
-        final Map<String, Map<String, Map<String, Set<String>>>> whiteList =
-                (Map<String, Map<String, Map<String, Set<String>>>>) spanS3ConfigFetcher.getWhiteListItems();
-        assertNull(whiteList);
+        assertNull(spanS3ConfigFetcher.getWhiteListItems());
 
         verify(mockFactory).createCurrentTimeMillis();
     }
@@ -151,7 +149,7 @@ public class SpanS3ConfigFetcherTest {
         when(mockFactory.createWhiteListItem(Matchers.<String>anyVararg()))
                 .thenReturn(SPAN_WHITE_LIST_ITEM, SECOND_SPAN_WHITE_LIST_ITEM);
 
-        spanS3ConfigFetcher.getWhiteListItems();
+        assertNotNull(spanS3ConfigFetcher.getWhiteListItems());
 
         assertTrue(spanS3ConfigFetcher.isInWhiteList(FINDER_NAME, SERVICE_NAME, OPERATION_NAME, TAG_NAME));
         assertFalse(spanS3ConfigFetcher.isInWhiteList(MISSING_FINDER_NAME, SERVICE_NAME, OPERATION_NAME, TAG_NAME));
@@ -173,8 +171,7 @@ public class SpanS3ConfigFetcherTest {
         whensForGetWhiteListItems();
         when(mockBufferedReader.readLine()).thenReturn(ONE_LINE_OF_GOOD_DATA).thenReturn(null);
 
-        final Map<String, Map<String, Map<String, Set<String>>>> whiteList =
-                (Map<String, Map<String, Map<String, Set<String>>>>) spanS3ConfigFetcher.getWhiteListItems();
+        final Object whiteList = spanS3ConfigFetcher.getWhiteListItems();
         assertsForEmptyWhiteList(whiteList, true, 0L);
 
         verify(mockFactory).createCurrentTimeMillis();
@@ -187,8 +184,7 @@ public class SpanS3ConfigFetcherTest {
         whensForGetWhiteListItems();
         when(mockBufferedReader.readLine()).thenThrow(ioException);
 
-        final Map<String, Map<String, Map<String, Set<String>>>> whiteList =
-                (Map<String, Map<String, Map<String, Set<String>>>>) spanS3ConfigFetcher.getWhiteListItems();
+        final Object whiteList = spanS3ConfigFetcher.getWhiteListItems();
         assertsForEmptyWhiteList(whiteList, false, MORE_THAN_ONE_HOUR);
 
         verifiesForGetWhiteListItems(1, 1);
@@ -201,8 +197,7 @@ public class SpanS3ConfigFetcherTest {
         whensForGetWhiteListItems();
         when(mockBufferedReader.readLine()).thenReturn(ONE_LINE_OF_BAD_DATA, (String) null);
 
-        final Map<String, Map<String, Map<String, Set<String>>>> whiteList =
-                (Map<String, Map<String, Map<String, Set<String>>>>) spanS3ConfigFetcher.getWhiteListItems();
+        final Object whiteList = spanS3ConfigFetcher.getWhiteListItems();
         assertsForEmptyWhiteList(whiteList, false, MORE_THAN_ONE_HOUR);
 
         verifiesForGetWhiteListItems(1, 1);
@@ -210,7 +205,7 @@ public class SpanS3ConfigFetcherTest {
                 any(S3ConfigFetcherBase.InvalidWhitelistItemInputException.class));
     }
 
-    private void assertsForEmptyWhiteList(Map<String, Map<String, Map<String, Set<String>>>> whiteList,
+    private void assertsForEmptyWhiteList(Object whiteList,
                                           boolean isUpdateInProgress,
                                           long lastUpdateTime) {
         assertNull(whiteList);
@@ -268,9 +263,7 @@ public class SpanS3ConfigFetcherTest {
     }
 
     @Test
-    public void testGetWhiteList() {
-        final Map<String, Map<String, Map<String, Map<String, Set<String>>>>> whiteList =
-                (Map<String, Map<String, Map<String, Map<String, Set<String>>>>>) factory.createWhiteList();
-        assertNotNull(whiteList);
+    public void testCreateWhiteList() {
+        assertNotNull(factory.createWhiteList());
     }
 }
