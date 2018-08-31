@@ -16,6 +16,7 @@
  */
 package com.expedia.www.haystack.commons.secretDetector.json;
 
+import com.expedia.www.haystack.commons.secretDetector.HaystackFinderEngine;
 import com.expedia.www.haystack.commons.secretDetector.S3ConfigFetcher;
 import com.google.gson.Gson;
 import com.google.gson.JsonNull;
@@ -45,7 +46,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 @RunWith(MockitoJUnitRunner.class)
 public class JsonDetectorTest {
     private static final String BUCKET = RANDOM.nextLong() + "BUCKET";
-    private static final FinderEngine FINDER_ENGINE = new FinderEngine();
+    private static final FinderEngine FINDER_ENGINE = new HaystackFinderEngine();
     private static final String JSON_TEMPLATE =
             "{\"rootElement\": {\"childMap\": {\"childKey\":%s}, \"childArray\": [%s]}}";
     private static final String NOT_A_SECRET_STRING = "\"NotASecret\"";

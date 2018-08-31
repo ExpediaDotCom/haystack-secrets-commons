@@ -29,6 +29,9 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
+import static com.expedia.www.haystack.commons.secretDetector.CldrRegion.FRANCE;
+import static com.expedia.www.haystack.commons.secretDetector.CldrRegion.UNITED_KINGDOM;
+import static com.expedia.www.haystack.commons.secretDetector.CldrRegion.UNITED_STATES;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyString;
@@ -38,10 +41,14 @@ import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class HaystackPhoneNumberFinderTest {
-    private static final String[] VALID_PHONE_NUMBERS = {
-            "1-800-555-1212", "1 (800) 555-1212", "800-555-1212", "(800) 555-1212", // US
-            "+33.06.23.12.45.54",                                                   // France
-            "(020) 1234 5678",                                                      // UK (London)
+    private static final String[] VALID_PHONE_NUMBERS_US = {
+            "1-800-555-1212", "1 (800) 555-1212", "800-555-1212", "(800) 555-1212"
+    };
+    private static final String[] VALID_PHONE_NUMBERS_FR = {
+            "+33.06.23.12.45.54"
+    };
+    private static final String[] VALID_PHONE_NUMBERS_UK = {
+            "(020) 1234 5678"
     };
 
     private static final String[] INVALID_US_PHONE_NUMBERS = {
@@ -55,11 +62,15 @@ public class HaystackPhoneNumberFinderTest {
     @Mock
     private PhoneNumberUtil mockPhoneNumberUtil;
 
-    private HaystackPhoneNumberFinder haystackPhoneNumberFinder;
+    private HaystackPhoneNumberFinder haystackPhoneNumberFinderUS;
+    private HaystackPhoneNumberFinder haystackPhoneNumberFinderFR;
+    private HaystackPhoneNumberFinder haystackPhoneNumberFinderUK;
 
     @Before
     public void setUp() {
-        haystackPhoneNumberFinder = new HaystackPhoneNumberFinder();
+        haystackPhoneNumberFinderUS = new HaystackPhoneNumberFinder(PhoneNumberUtil.getInstance(), UNITED_STATES);
+        haystackPhoneNumberFinderFR = new HaystackPhoneNumberFinder(PhoneNumberUtil.getInstance(), FRANCE);
+        haystackPhoneNumberFinderUK = new HaystackPhoneNumberFinder(PhoneNumberUtil.getInstance(), UNITED_KINGDOM);
     }
 
     @After
@@ -72,13 +83,29 @@ public class HaystackPhoneNumberFinderTest {
         final String expected = HaystackPhoneNumberFinder.class.getSimpleName()
                 .replace("Haystack", "")
                 .replace("Finder", "");
-        assertEquals(expected, haystackPhoneNumberFinder.getName());
+        assertEquals(expected, haystackPhoneNumberFinderUS.getName());
     }
 
     @Test
-    public void testFindStringValidNumbers() {
-        for (String phoneNumber : VALID_PHONE_NUMBERS) {
-            final List<String> strings = haystackPhoneNumberFinder.find(phoneNumber);
+    public void testFindStringValidNumbersUS() {
+        for (String phoneNumber : VALID_PHONE_NUMBERS_US) {
+            final List<String> strings = haystackPhoneNumberFinderUS.find(phoneNumber);
+            assertEquals(phoneNumber, 1, strings.size());
+        }
+    }
+
+    @Test
+    public void testFindStringValidNumbersFR() {
+        for (String phoneNumber : VALID_PHONE_NUMBERS_FR) {
+            final List<String> strings = haystackPhoneNumberFinderFR.find(phoneNumber);
+            assertEquals(phoneNumber, 1, strings.size());
+        }
+    }
+
+    @Test
+    public void testFindStringValidNumbersUK() {
+        for (String phoneNumber : VALID_PHONE_NUMBERS_UK) {
+            final List<String> strings = haystackPhoneNumberFinderUK.find(phoneNumber);
             assertEquals(phoneNumber, 1, strings.size());
         }
     }
@@ -86,16 +113,16 @@ public class HaystackPhoneNumberFinderTest {
     @Test
     public void testFindStringInvalidNumber() {
         for (String phoneNumber : INVALID_US_PHONE_NUMBERS) {
-            final List<String> strings = haystackPhoneNumberFinder.find(phoneNumber);
+            final List<String> strings = haystackPhoneNumberFinderUS.find(phoneNumber);
             assertEquals(phoneNumber, 0, strings.size());
         }
     }
 
     @Test
     public void testFindStringsValidNumbers() {
-        final List<String> phoneNumbers = Arrays.asList(VALID_PHONE_NUMBERS);
-        final List<String> strings = haystackPhoneNumberFinder.find(phoneNumbers);
-        assertEquals(VALID_PHONE_NUMBERS.length, strings.size());
+        final List<String> phoneNumbers = Arrays.asList(VALID_PHONE_NUMBERS_US);
+        final List<String> strings = haystackPhoneNumberFinderUS.find(phoneNumbers);
+        assertEquals(VALID_PHONE_NUMBERS_US.length, strings.size());
         final Iterator<String> phoneNumbersIterator = phoneNumbers.iterator();
         final Iterator<String> stringsIterator = strings.iterator();
         while (phoneNumbersIterator.hasNext()) {
@@ -106,7 +133,7 @@ public class HaystackPhoneNumberFinderTest {
     @Test
     public void testFindStringsInvalidNumbers() {
         final List<String> phoneNumbers = Arrays.asList(INVALID_US_PHONE_NUMBERS);
-        final List<String> strings = haystackPhoneNumberFinder.find(phoneNumbers);
+        final List<String> strings = haystackPhoneNumberFinderUS.find(phoneNumbers);
         assertEquals(0, strings.size());
     }
 
@@ -114,11 +141,11 @@ public class HaystackPhoneNumberFinderTest {
     public void testFindNumberParseException() throws NumberParseException {
         when(mockPhoneNumberUtil.parseAndKeepRawInput(anyString(), anyString())).thenThrow(
                 new NumberParseException(NumberParseException.ErrorType.TOO_LONG, "Test"));
-        haystackPhoneNumberFinder = new HaystackPhoneNumberFinder(mockPhoneNumberUtil);
+        haystackPhoneNumberFinderUS = new HaystackPhoneNumberFinder(mockPhoneNumberUtil, UNITED_STATES);
 
-        final List<String> phoneNumbers = haystackPhoneNumberFinder.find(VALID_PHONE_NUMBERS[0]);
+        final List<String> phoneNumbers = haystackPhoneNumberFinderUS.find(VALID_PHONE_NUMBERS_US[0]);
 
         assertTrue(phoneNumbers.isEmpty());
-        verify(mockPhoneNumberUtil).parseAndKeepRawInput(VALID_PHONE_NUMBERS[0], "CA");
+        verify(mockPhoneNumberUtil).parseAndKeepRawInput(VALID_PHONE_NUMBERS_US[0], UNITED_STATES.getRegionCode());
     }
 }
