@@ -20,6 +20,7 @@ import com.expedia.open.tracing.Log;
 import com.expedia.open.tracing.Span;
 import com.expedia.open.tracing.Tag;
 import com.expedia.www.haystack.commons.secretDetector.FinderNameAndServiceName;
+import com.expedia.www.haystack.commons.secretDetector.HaystackFinderEngine;
 import com.expedia.www.haystack.commons.secretDetector.span.SpanSecretMasker.Factory;
 import com.expedia.www.haystack.metrics.MetricObjects;
 import com.netflix.servo.monitor.Counter;
@@ -68,7 +69,7 @@ import static org.mockito.Mockito.when;
 public class SpanSecretMaskerTest {
     private static final String APPLICATION = RANDOM.nextLong() + "APPLICATION";
     private static final String BUCKET = RANDOM.nextLong() + "BUCKET";
-    private static final FinderEngine FINDER_ENGINE = new FinderEngine();
+    private static final FinderEngine FINDER_ENGINE = new HaystackFinderEngine();
     private static final String EMAIL_FINDER_NAME_IN_FINDERS_DEFAULT_DOT_XML = "Email";
     private static final FinderNameAndServiceName EMAIL_FINDER_NAME_AND_SERVICE_NAME =
             new FinderNameAndServiceName(EMAIL_FINDER_NAME_IN_FINDERS_DEFAULT_DOT_XML, SERVICE_NAME);

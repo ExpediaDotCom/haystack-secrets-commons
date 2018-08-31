@@ -22,20 +22,11 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 import io.dataapps.chlorine.finder.Finder;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static com.expedia.www.haystack.commons.secretDetector.CldrRegions.CANADA;
-import static com.expedia.www.haystack.commons.secretDetector.CldrRegions.FRANCE;
-import static com.expedia.www.haystack.commons.secretDetector.CldrRegions.GERMANY;
-import static com.expedia.www.haystack.commons.secretDetector.CldrRegions.ITALY;
-import static com.expedia.www.haystack.commons.secretDetector.CldrRegions.JAPAN;
-import static com.expedia.www.haystack.commons.secretDetector.CldrRegions.UNITED_KINGDOM;
-import static com.expedia.www.haystack.commons.secretDetector.CldrRegions.UNITED_STATES;
 
 @SuppressWarnings("WeakerAccess")
 public class HaystackPhoneNumberFinder implements Finder {
@@ -43,26 +34,19 @@ public class HaystackPhoneNumberFinder implements Finder {
     private static final Pattern ALPHAS_PATTERN = Pattern.compile("[A-Za-z]+");
     private static final Pattern ALL_NUMBERS_PATTERN = Pattern.compile("^\\d+$");
     private final PhoneNumberUtil phoneNumberUtil;
-    private final List<String> regions = new ArrayList<>();
+    private final String regionCode;
 
-    public HaystackPhoneNumberFinder() {
-        this(PhoneNumberUtil.getInstance());
-    }
-
-    public HaystackPhoneNumberFinder(PhoneNumberUtil phoneNumberUtil) {
+    public HaystackPhoneNumberFinder(PhoneNumberUtil phoneNumberUtil, CldrRegion cldrRegion) {
         this.phoneNumberUtil = phoneNumberUtil;
-        regions.addAll(Arrays.asList(
-                // G7 countries to start, we'll see how well this size of list performs
-                CANADA,
-                FRANCE,
-                GERMANY,
-                ITALY,
-                JAPAN,
-                UNITED_KINGDOM,
-                UNITED_STATES
-        ));
+        this.regionCode = cldrRegion.getRegionCode();
     }
 
+    /**
+     * All HaystackPhoneNumberFinder instances have the same name, so that the reports and/or metrics when secrets are
+     * found aggregates all phone number secrets, regardless of the region in which a phone number matched.
+     *
+     * @return the String "PhoneNumber"
+     */
     @SuppressWarnings("SuspiciousGetterSetter")
     @Override
     public String getName() {
@@ -82,14 +66,12 @@ public class HaystackPhoneNumberFinder implements Finder {
     @Override
     public List<String> find(String input) {
         try {
-            if (!containsAnyAlphabeticCharacters(input)) {
-                if(isNotIpV4Address(input)) {
-                    if(!containsOnlyNumbers(input)) {
-                        for (final String region : regions) {
-                            final PhoneNumber phoneNumber = phoneNumberUtil.parseAndKeepRawInput(input, region);
-                            if (phoneNumberUtil.isValidNumberForRegion(phoneNumber, region)) {
-                                return Collections.singletonList(phoneNumber.getRawInput());
-                            }
+            if (!containsAnyAlphabeticCharacters(input)) { // Strings that contain any letters will not be checked
+                if(!isIpV4Address(input)) {                // Strings that look like IP addresses will not be checked
+                    if(!containsOnlyNumbers(input)) {      // Straight numbers, like database IDs, will not be checked
+                        final PhoneNumber phoneNumber = phoneNumberUtil.parseAndKeepRawInput(input, this.regionCode);
+                        if (phoneNumberUtil.isValidNumberForRegion(phoneNumber, regionCode)) {
+                            return Collections.singletonList(phoneNumber.getRawInput());
                         }
                     }
                 }
@@ -105,8 +87,8 @@ public class HaystackPhoneNumberFinder implements Finder {
         return matcher.find();
     }
 
-    private static boolean isNotIpV4Address(String input) {
-        return NonLocalIpV4AddressFinder.IPV4_FINDER.find(input).isEmpty();
+    private static boolean isIpV4Address(String input) {
+        return !NonLocalIpV4AddressFinder.IPV4_FINDER.find(input).isEmpty();
     }
 
     private static boolean containsOnlyNumbers(String input) {

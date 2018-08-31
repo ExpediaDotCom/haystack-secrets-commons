@@ -17,6 +17,7 @@
 package com.expedia.www.haystack.commons.secretDetector.span;
 
 import com.expedia.www.haystack.commons.secretDetector.FinderNameAndServiceName;
+import com.expedia.www.haystack.commons.secretDetector.HaystackFinderEngine;
 import com.expedia.www.haystack.commons.secretDetector.NonLocalIpV4AddressFinder;
 import com.expedia.www.haystack.commons.secretDetector.TestConstantsAndCommonCode;
 import com.expedia.www.haystack.commons.secretDetector.span.SpanDetector.Factory;
@@ -71,7 +72,7 @@ public class SpanDetectorTest {
     private static final String BUCKET = RANDOM.nextLong() + "BUCKET";
     private static final String FINDER_NAME = RANDOM.nextLong() + "FINDER_NAME";
     private static final String SERVICE_NAME = RANDOM.nextLong() + "SERVICE_NAME";
-    private static final FinderEngine FINDER_ENGINE = new FinderEngine();
+    private static final FinderEngine FINDER_ENGINE = new HaystackFinderEngine();
     private static final String CREDIT_CARD_FINDER_NAME = "Credit_Card";
     private static final String CREDIT_CARD_FINDER_NAME_IN_FINDERS_DEFAULT_DOT_XML = CREDIT_CARD_FINDER_NAME;
     private static final String EMAIL_FINDER_NAME_IN_FINDERS_DEFAULT_DOT_XML = "Email";
