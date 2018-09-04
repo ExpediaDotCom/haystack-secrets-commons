@@ -17,10 +17,9 @@
 package com.expedia.www.haystack.commons.secretDetector;
 
 import io.dataapps.chlorine.finder.FinderEngine;
-import io.dataapps.chlorine.pattern.RegexFinder;
 
 public final class HaystackFinderEngine extends FinderEngine {
     public HaystackFinderEngine() {
-        super(new HaystackFinderProvider(), false);
+        super((new HaystackFinderProvider()).getFinders(), false);
     }
 }
