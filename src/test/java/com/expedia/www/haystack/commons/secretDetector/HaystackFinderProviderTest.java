@@ -9,7 +9,6 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.slf4j.Logger;
-import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -23,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import static com.expedia.www.haystack.commons.secretDetector.HaystackFinderProvider.IO_EXCEPTION_PROBLEM;
+import static com.expedia.www.haystack.commons.secretDetector.HaystackFinderProvider.OBJECT_CREATION_PROBLEM;
 import static com.expedia.www.haystack.commons.secretDetector.HaystackFinderProvider.PARSER_CONFIGURATION_PROBLEM;
 import static com.expedia.www.haystack.commons.secretDetector.HaystackFinderProvider.PROBLEM_WITH_REGION_MSG;
 import static com.expedia.www.haystack.commons.secretDetector.HaystackFinderProvider.SAX_EXCEPTION_PROBLEM;
@@ -62,7 +62,7 @@ public class HaystackFinderProviderTest {
         when(mockFactory.createSaxParserFactory()).thenReturn(saxParserFactory);
         when(mockFactory.createSaxParser(any())).thenReturn(saxParserFactory.newSAXParser());
 
-        haystackFinderProvider = new HaystackFinderProvider(mockDefaultFinderProvider, mockLogger, mockFactory);
+        haystackFinderProvider = new HaystackFinderProvider(mockLogger, mockFactory);
     }
 
     @After
@@ -70,7 +70,6 @@ public class HaystackFinderProviderTest {
         verify(mockFactory, times(timesConstructorCalled)).getFindersDotDefaultInputStream();
         verify(mockFactory, times(timesConstructorCalled)).createSaxParserFactory();
         verify(mockFactory, times(timesConstructorCalled)).createSaxParser(saxParserFactory);
-        verify(mockDefaultFinderProvider, times(timesConstructorCalled)).getFinders();
         verify(mockLogger).error(String.format(PROBLEM_WITH_REGION_MSG, "NON_EXISTENT_REGION"));
 
         verifyNoMoreInteractions(mockDefaultFinderProvider);
@@ -84,11 +83,13 @@ public class HaystackFinderProviderTest {
     public void testDefaultConstructor() {
         haystackFinderProvider = new HaystackFinderProvider();
         assertEquals(13, (haystackFinderProvider.getFinders().size()));
+        verify(mockLogger).error(eq(OBJECT_CREATION_PROBLEM), any(ClassNotFoundException.class));
     }
 
     @Test
     public void testConstructor() {
-        assertEquals(7, (haystackFinderProvider.getFinders().size()));
+        assertEquals(13, (haystackFinderProvider.getFinders().size()));
+        verify(mockLogger).error(eq(OBJECT_CREATION_PROBLEM), any(ClassNotFoundException.class));
     }
 
     @Test
@@ -100,13 +101,14 @@ public class HaystackFinderProviderTest {
         timesConstructorCalled = 2;
         when(mockFactory.getFindersDotDefaultInputStream()).thenReturn(mockInputStream);
 
-        haystackFinderProvider = new HaystackFinderProvider(mockDefaultFinderProvider, mockLogger, mockFactory);
+        haystackFinderProvider = new HaystackFinderProvider(mockLogger, mockFactory);
         assertEquals(0, (haystackFinderProvider.getFinders().size()));
 
         verify(mockSAXParser).parse(eq(mockInputStream), any(DefaultHandler.class));
         verify(mockInputStream).close();
 
         verify(mockLogger).error(IO_EXCEPTION_PROBLEM, ioException);
+        verify(mockLogger).error(eq(OBJECT_CREATION_PROBLEM), any(ClassNotFoundException.class));
     }
 
     @Test
@@ -117,11 +119,12 @@ public class HaystackFinderProviderTest {
         timesConstructorCalled = 2;
         when(mockFactory.getFindersDotDefaultInputStream()).thenReturn(mockInputStream);
 
-        haystackFinderProvider = new HaystackFinderProvider(mockDefaultFinderProvider, mockLogger, mockFactory);
+        haystackFinderProvider = new HaystackFinderProvider(mockLogger, mockFactory);
         assertEquals(0, (haystackFinderProvider.getFinders().size()));
 
         verify(mockInputStream).close();
         verify(mockLogger).error(SAX_EXCEPTION_PROBLEM, saxParseException);
+        verify(mockLogger).error(eq(OBJECT_CREATION_PROBLEM), any(ClassNotFoundException.class));
     }
 
     @Test
@@ -132,11 +135,12 @@ public class HaystackFinderProviderTest {
         timesConstructorCalled = 2;
         when(mockFactory.getFindersDotDefaultInputStream()).thenReturn(mockInputStream);
 
-        haystackFinderProvider = new HaystackFinderProvider(mockDefaultFinderProvider, mockLogger, mockFactory);
+        haystackFinderProvider = new HaystackFinderProvider(mockLogger, mockFactory);
         assertEquals(0, (haystackFinderProvider.getFinders().size()));
 
         verify(mockInputStream).close();
         verify(mockLogger).error(PARSER_CONFIGURATION_PROBLEM, parserConfigurationException);
+        verify(mockLogger).error(eq(OBJECT_CREATION_PROBLEM), any(ClassNotFoundException.class));
     }
 
 }

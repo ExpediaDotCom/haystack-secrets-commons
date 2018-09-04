@@ -31,42 +31,40 @@ public class HaystackFinderProvider implements FinderProvider {
     static final String SAX_EXCEPTION_PROBLEM = "SAX exception problem";
     static final String IO_EXCEPTION_PROBLEM = "IO exception problem";
     static final String PARSER_CONFIGURATION_PROBLEM = "Parser configuration problem";
+    static final String NAME_ELEMENT_NAME = "NAME";
+    static final String PATTERN_ELEMENT_NAME = "PATTERN";
+    static final String FLAGS_ELEMENT_NAME = "FLAGS";
+    static final String OBJECT_CREATION_PROBLEM = "Problem creating Finder object";
     private final List<Finder> finders;
     private final Logger logger;
     private final Factory factory;
 
     public HaystackFinderProvider() {
-        this(new DefaultFinderProvider(DefaultFinderProvider.class.getClassLoader()
-                        .getResourceAsStream(FINDERS_DEFAULT_XML)),
-                LoggerFactory.getLogger(HaystackFinderProvider.class),
-                new Factory());
+        this(LoggerFactory.getLogger(HaystackFinderProvider.class), new Factory());
     }
 
     @VisibleForTesting
-    HaystackFinderProvider(DefaultFinderProvider defaultFinderProvider,
-                           Logger logger,
+    HaystackFinderProvider(Logger logger,
                            Factory factory) {
         finders = new ArrayList<>();
         this.logger = logger;
         this.factory = factory;
-        finders.addAll(readNonHaystackFinders(defaultFinderProvider));
-        finders.addAll(readHaystackPhoneNumberFinders());
+        finders.addAll(readFinders());
     }
 
-    private List<Finder> readNonHaystackFinders(
-            DefaultFinderProvider defaultFinderProvider) {
-        final ArrayList<Finder> finderList = new ArrayList<>(defaultFinderProvider.getFinders());
-        finderList.removeIf(finder -> finder instanceof RegexFinder
-                && ((RegexFinder) finder).getPattern().toString().isEmpty());
-        return finderList;
-    }
-
-    private List<Finder> readHaystackPhoneNumberFinders() {
+    private List<Finder> readFinders() {
         final List<Finder> finderList = new ArrayList<>();
-        try(final InputStream in = factory.getFindersDotDefaultInputStream()) {
+        try (final InputStream in = factory.getFindersDotDefaultInputStream()) {
             final SAXParserFactory saxParserFactory = factory.createSaxParserFactory();
             final SAXParser saxParser = factory.createSaxParser(saxParserFactory);
             final DefaultHandler handler = new DefaultHandler() {
+                boolean isInNameElement = false;
+                boolean isInPatternElement = false;
+                boolean isInFlagsElement = false;
+                final StringBuilder name = new StringBuilder();
+                final StringBuilder pattern = new StringBuilder();
+                final StringBuilder strFlags = new StringBuilder();
+                int flags = RegexFinder.DEFAULT_FLAGS;
                 boolean isInRegionElement = false;
                 boolean isInClassElement = false;
                 boolean isInEnabledElement = false;
@@ -77,7 +75,13 @@ public class HaystackFinderProvider implements FinderProvider {
 
                 @Override
                 public void startElement(String uri, String localName, String qName, Attributes attributes) {
-                    if (qName.equalsIgnoreCase(REGION_ELEMENT_NAME)) {
+                    if (qName.equalsIgnoreCase(NAME_ELEMENT_NAME)) {
+                        isInNameElement = true;
+                    } else if (qName.equalsIgnoreCase(PATTERN_ELEMENT_NAME)) {
+                        isInPatternElement = true;
+                    } else if (qName.equalsIgnoreCase(FLAGS_ELEMENT_NAME)) {
+                        isInFlagsElement = true;
+                    } else if (qName.equalsIgnoreCase(REGION_ELEMENT_NAME)) {
                         isInRegionElement = true;
                     } else if (qName.equalsIgnoreCase(CLASS_ELEMENT_NAME)) {
                         isInClassElement = true;
@@ -88,7 +92,14 @@ public class HaystackFinderProvider implements FinderProvider {
 
                 @Override
                 public void endElement(String uri, String localName, String qName) {
-                    if (qName.equalsIgnoreCase(REGION_ELEMENT_NAME)) {
+                    if (qName.equalsIgnoreCase(NAME_ELEMENT_NAME)) {
+                        isInNameElement = false;
+                    } else if (qName.equalsIgnoreCase(PATTERN_ELEMENT_NAME)) {
+                        isInPatternElement = false;
+                    } else if (qName.equalsIgnoreCase(FLAGS_ELEMENT_NAME)) {
+                        isInFlagsElement = false;
+                        flags = Integer.parseInt(strFlags.toString().trim());
+                    } else if (qName.equalsIgnoreCase(REGION_ELEMENT_NAME)) {
                         isInRegionElement = false;
                     } else if (qName.equalsIgnoreCase(CLASS_ELEMENT_NAME)) {
                         isInClassElement = false;
@@ -97,18 +108,39 @@ public class HaystackFinderProvider implements FinderProvider {
                         isInEnabledElement = false;
                     } else {
                         if (enabled) {
-                            if (className.toString().trim().equals(HaystackPhoneNumberFinder.class.getName())) {
+                            final String trimmedClassName = className.toString().trim();
+                            if (trimmedClassName.equals(HaystackPhoneNumberFinder.class.getName())) {
                                 final String trimmedRegion = region.toString().trim();
                                 try {
                                     final HaystackPhoneNumberFinder haystackPhoneNumberFinder =
                                             new HaystackPhoneNumberFinder(PhoneNumberUtil.getInstance(),
                                                     CldrRegion.valueOf(trimmedRegion));
                                     finderList.add(haystackPhoneNumberFinder);
-                                } catch(IllegalArgumentException e) {
+                                } catch (IllegalArgumentException e) {
                                     logger.error(String.format(PROBLEM_WITH_REGION_MSG, trimmedRegion));
                                 }
+                            } else {
+                                if (!trimmedClassName.isEmpty()) {
+                                    try {
+                                        Class<?> klass = Thread.currentThread().getContextClassLoader()
+                                                .loadClass(trimmedClassName);
+                                        finders.add((Finder) klass.newInstance());
+                                    } catch (ClassNotFoundException
+                                            | InstantiationException
+                                            | IllegalAccessException e) {
+                                        logger.error(OBJECT_CREATION_PROBLEM, e);
+                                    }
+                                } else if(!pattern.toString().trim().isEmpty()){
+                                    finders.add(new RegexFinder(name.toString().trim(), pattern.toString().trim()));
+                                }
+
                             }
                         }
+                        name.setLength(0);
+                        pattern.setLength(0);
+                        flags = RegexFinder.DEFAULT_FLAGS;
+                        strFlags.setLength(0);
+                        enabled = true;
                         region.setLength(0);
                         className.setLength(0);
                         enabled = true;
@@ -118,7 +150,13 @@ public class HaystackFinderProvider implements FinderProvider {
 
                 @Override
                 public void characters(char ch[], int start, int length) {
-                    if (isInRegionElement) {
+                    if (isInNameElement) {
+                        name.append(new String(ch, start, length));
+                    } else if (isInPatternElement) {
+                        pattern.append(new String(ch, start, length));
+                    } else if (isInFlagsElement) {
+                        strFlags.append(new String(ch, start, length));
+                    } else if (isInRegionElement) {
                         region.append(ch, start, length);
                     } else if (isInClassElement) {
                         className.append(ch, start, length);
