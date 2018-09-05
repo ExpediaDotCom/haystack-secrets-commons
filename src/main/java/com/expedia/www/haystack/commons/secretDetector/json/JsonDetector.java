@@ -17,13 +17,13 @@
 package com.expedia.www.haystack.commons.secretDetector.json;
 
 import com.expedia.www.haystack.commons.secretDetector.DetectorBase;
+import com.expedia.www.haystack.commons.secretDetector.HaystackFinderEngine;
 import com.expedia.www.haystack.commons.secretDetector.S3ConfigFetcher;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.netflix.servo.util.VisibleForTesting;
-import io.dataapps.chlorine.finder.FinderEngine;
 
 import java.util.Deque;
 import java.util.HashMap;
@@ -35,11 +35,11 @@ import java.util.Map;
 @SuppressWarnings("WeakerAccess")
 public class JsonDetector extends DetectorBase {
     public JsonDetector(String bucket) {
-        this(new FinderEngine(), new S3ConfigFetcher(bucket, "secret-detector/jsonWhiteListItems.txt"));
+        this(new HaystackFinderEngine(), new S3ConfigFetcher(bucket, "secret-detector/jsonWhiteListItems.txt"));
     }
 
-    public JsonDetector(FinderEngine finderEngine, S3ConfigFetcher s3ConfigFetcher) {
-        super(finderEngine, s3ConfigFetcher);
+    public JsonDetector(HaystackFinderEngine haystackFinderEngine, S3ConfigFetcher s3ConfigFetcher) {
+        super(haystackFinderEngine, s3ConfigFetcher);
     }
 
     /**
@@ -94,7 +94,7 @@ public class JsonDetector extends DetectorBase {
                                      Deque<Object> ids,
                                      JsonPrimitive value) {
         if (value.isString()) {
-            final Map<String, List<String>> secrets = finderEngine.findWithType(value.getAsString());
+            final Map<String, List<String>> secrets = haystackFinderEngine.findWithType(value.getAsString());
             if (!secrets.isEmpty()) {
                 putKeysOfSecretsIntoMap(mapOfTypeToKeysOfSecrets, getCompleteHierarchy(ids), secrets);
             }
@@ -103,7 +103,7 @@ public class JsonDetector extends DetectorBase {
                // turn on number detection and whitelist the false positives that result. We will do this for both JSON
                // and XML BLOBs, and perhaps for fastinfoset BLOBs too.
         } else if (value.isNumber()) {
-            final Map<String, List<String>> secrets = finderEngine.findWithType(value.getAsNumber().toString());
+            final Map<String, List<String>> secrets = haystackFinderEngine.findWithType(value.getAsNumber().toString());
             if (!secrets.isEmpty()) {
                 putKeysOfSecretsIntoMap(mapOfTypeToKeysOfSecrets, getCompleteHierarchy(ids), secrets);
             }

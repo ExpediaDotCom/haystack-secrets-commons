@@ -23,7 +23,6 @@ import com.expedia.www.haystack.commons.secretDetector.TestConstantsAndCommonCod
 import com.expedia.www.haystack.commons.secretDetector.span.SpanDetector.Factory;
 import com.expedia.www.haystack.metrics.MetricObjects;
 import com.netflix.servo.monitor.Counter;
-import io.dataapps.chlorine.finder.FinderEngine;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -72,7 +71,7 @@ public class SpanDetectorTest {
     private static final String BUCKET = RANDOM.nextLong() + "BUCKET";
     private static final String FINDER_NAME = RANDOM.nextLong() + "FINDER_NAME";
     private static final String SERVICE_NAME = RANDOM.nextLong() + "SERVICE_NAME";
-    private static final FinderEngine FINDER_ENGINE = new HaystackFinderEngine();
+    private static final HaystackFinderEngine HAYSTACK_FINDER_ENGINE = new HaystackFinderEngine();
     private static final String CREDIT_CARD_FINDER_NAME = "Credit_Card";
     private static final String CREDIT_CARD_FINDER_NAME_IN_FINDERS_DEFAULT_DOT_XML = CREDIT_CARD_FINDER_NAME;
     private static final String EMAIL_FINDER_NAME_IN_FINDERS_DEFAULT_DOT_XML = "Email";
@@ -101,7 +100,7 @@ public class SpanDetectorTest {
 
     @Before
     public void setUp() {
-        spanDetector = new SpanDetector(mockLogger, FINDER_ENGINE, mockFactory, mockSpanS3ConfigFetcher, APPLICATION);
+        spanDetector = new SpanDetector(mockLogger, HAYSTACK_FINDER_ENGINE, mockFactory, mockSpanS3ConfigFetcher, APPLICATION);
         factory = new Factory(mockMetricObjects);
     }
 
