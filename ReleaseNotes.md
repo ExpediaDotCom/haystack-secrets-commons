@@ -1,5 +1,8 @@
 # Release Notes
 
+## 1.0.2 / 2018-09-05 Make CldrRegion public
+Needs to be public so that it can be used by Spring configuration files in other packages
+
 ## 1.0.1 / 2018-09-04 Separation of the phone number finder into individual finders to facilitate multi-threading
 Similar work is still needed for the credit card finder if we decide to continue the multi-threading effort. 
 
