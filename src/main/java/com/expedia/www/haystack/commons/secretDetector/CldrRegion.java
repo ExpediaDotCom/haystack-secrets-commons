@@ -21,7 +21,7 @@ package com.expedia.www.haystack.commons.secretDetector;
  * http://www.unicode.org/cldr/charts/30/supplemental/territory_information.html. They are used in the code to specify
  * what phone number formats are considered by Haystack secret detection. Also see
  */
-enum CldrRegion {
+public enum CldrRegion {
     AFGHANISTAN("AF"),
     ALAND_ISLANDS("AX"),
     ALBANIA("AL"),
