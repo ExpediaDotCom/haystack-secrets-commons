@@ -1,5 +1,8 @@
 # Release Notes
 
+## 1.0.3 / 2018-09-05 User HaystackFinderEngine everywhere
+Solves problems with using custom finders that are specified in default_finders.xml
+
 ## 1.0.2 / 2018-09-05 Make CldrRegion public
 Needs to be public so that it can be used by Spring configuration files in other packages
 

@@ -21,12 +21,12 @@ import com.expedia.open.tracing.Span;
 import com.expedia.open.tracing.Tag;
 import com.expedia.www.haystack.commons.secretDetector.DetectorBase;
 import com.expedia.www.haystack.commons.secretDetector.FinderNameAndServiceName;
+import com.expedia.www.haystack.commons.secretDetector.HaystackFinderEngine;
 import com.expedia.www.haystack.metrics.MetricObjects;
 import com.google.common.base.Strings;
 import com.google.protobuf.ByteString;
 import com.netflix.servo.monitor.Counter;
 import com.netflix.servo.util.VisibleForTesting;
-import io.dataapps.chlorine.finder.FinderEngine;
 import org.apache.kafka.streams.kstream.ValueMapper;
 import org.slf4j.LoggerFactory;
 
@@ -62,19 +62,19 @@ public class SpanSecretMasker extends DetectorBase implements ValueMapper<Span, 
 
     public SpanSecretMasker(String bucket, String application) {
         //noinspection LoggerInitializedWithForeignClass
-        this(new FinderEngine(),
+        this(new HaystackFinderEngine(),
                 new Factory(),
                 new SpanS3ConfigFetcher(bucket, "secret-detector/whiteListItems.txt"),
                 new SpanNameAndCountRecorder(LoggerFactory.getLogger(SpanNameAndCountRecorder.class), Clock.systemUTC()),
                 application);
     }
 
-    public SpanSecretMasker(FinderEngine finderEngine,
+    public SpanSecretMasker(HaystackFinderEngine haystackFinderEngine,
                             SpanSecretMasker.Factory spanSecretMaskerFactory,
                             SpanS3ConfigFetcher spanS3ConfigFetcher,
                             SpanNameAndCountRecorder spanNameAndCountRecorder,
                             String application) {
-        super(finderEngine, spanS3ConfigFetcher);
+        super(haystackFinderEngine, spanS3ConfigFetcher);
         this.factory = spanSecretMaskerFactory;
         this.spanNameAndCountRecorder = spanNameAndCountRecorder;
         this.application = application;
@@ -197,7 +197,7 @@ public class SpanSecretMasker extends DetectorBase implements ValueMapper<Span, 
     }
 
     private Map<String, List<String>> findSecrets(Tag tag, String input) {
-        final Map<String, List<String>> mapOfTypeToValuesOfSecrets = finderEngine.findWithType(input);
+        final Map<String, List<String>> mapOfTypeToValuesOfSecrets = haystackFinderEngine.findWithType(input);
         for (Map.Entry<String, List<String>> stringListEntry : mapOfTypeToValuesOfSecrets.entrySet()) {
             stringListEntry.getValue().replaceAll(s -> tag.getKey());
         }

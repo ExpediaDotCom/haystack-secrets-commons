@@ -16,19 +16,17 @@
  */
 package com.expedia.www.haystack.commons.secretDetector;
 
-import io.dataapps.chlorine.finder.FinderEngine;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 @SuppressWarnings("AbstractClassWithoutAbstractMethods")
 public abstract class DetectorBase {
-    protected final FinderEngine finderEngine;
+    protected final HaystackFinderEngine haystackFinderEngine;
     protected final S3ConfigFetcherBase s3ConfigFetcher;
 
-    protected DetectorBase(FinderEngine finderEngine, S3ConfigFetcherBase s3ConfigFetcher) {
-        this.finderEngine = finderEngine;
+    protected DetectorBase(HaystackFinderEngine haystackFinderEngine, S3ConfigFetcherBase s3ConfigFetcher) {
+        this.haystackFinderEngine = haystackFinderEngine;
         this.s3ConfigFetcher = s3ConfigFetcher;
     }
 

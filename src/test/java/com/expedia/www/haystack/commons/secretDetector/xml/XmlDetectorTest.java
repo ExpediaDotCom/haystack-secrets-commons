@@ -20,7 +20,6 @@ import com.expedia.www.haystack.commons.secretDetector.HaystackFinderEngine;
 import com.expedia.www.haystack.commons.secretDetector.S3ConfigFetcher;
 import com.expedia.www.haystack.metrics.MetricObjects;
 import com.netflix.servo.monitor.Counter;
-import io.dataapps.chlorine.finder.FinderEngine;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -46,7 +45,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 @RunWith(MockitoJUnitRunner.class)
 public class XmlDetectorTest {
     private static final String BUCKET = RANDOM.nextLong() + "BUCKET";
-    private static final FinderEngine FINDER_ENGINE = new HaystackFinderEngine();
+    private static final HaystackFinderEngine HAYSTACK_FINDER_ENGINE = new HaystackFinderEngine();
     private static final String XML_TEMPLATE =
             "<rootElement rootAttribute='%s'>%s<childElement childAttribute='%s'>%s</childElement></rootElement>";
     private static final String NOT_A_SECRET = "NotASecret";
@@ -82,7 +81,7 @@ public class XmlDetectorTest {
 
     @Before
     public void setUp() {
-        xmlDetector = new XmlDetector(FINDER_ENGINE, mockS3ConfigFetcher);
+        xmlDetector = new XmlDetector(HAYSTACK_FINDER_ENGINE, mockS3ConfigFetcher);
     }
 
     @After

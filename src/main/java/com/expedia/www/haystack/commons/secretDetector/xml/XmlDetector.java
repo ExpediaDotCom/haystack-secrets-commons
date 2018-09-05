@@ -17,8 +17,8 @@
 package com.expedia.www.haystack.commons.secretDetector.xml;
 
 import com.expedia.www.haystack.commons.secretDetector.DetectorBase;
+import com.expedia.www.haystack.commons.secretDetector.HaystackFinderEngine;
 import com.expedia.www.haystack.commons.secretDetector.S3ConfigFetcher;
-import io.dataapps.chlorine.finder.FinderEngine;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
@@ -38,11 +38,11 @@ public class XmlDetector extends DetectorBase {
     private static final String[] ZERO_LENGTH_STRING_ARRAY = new String[0];
 
     public XmlDetector(String bucket) {
-        this(new FinderEngine(), new S3ConfigFetcher(bucket, "secret-detector/xmlWhiteListItems.txt"));
+        this(new HaystackFinderEngine(), new S3ConfigFetcher(bucket, "secret-detector/xmlWhiteListItems.txt"));
     }
 
-    public XmlDetector(FinderEngine finderEngine, S3ConfigFetcher s3ConfigFetcher) {
-        super(finderEngine, s3ConfigFetcher);
+    public XmlDetector(HaystackFinderEngine haystackFinderEngine, S3ConfigFetcher s3ConfigFetcher) {
+        super(haystackFinderEngine, s3ConfigFetcher);
     }
 
     /**
@@ -67,7 +67,7 @@ public class XmlDetector extends DetectorBase {
     private void findSecretsInNodeValue(Node node, Map<String, List<String>> mapOfTypeToKeysOfSecrets) {
         final String nodeValue = node.getNodeValue();
         if (nodeValue != null) {
-            final Map<String, List<String>> secrets = finderEngine.findWithType(nodeValue);
+            final Map<String, List<String>> secrets = haystackFinderEngine.findWithType(nodeValue);
             if (!secrets.isEmpty()) {
                 final String completeHierarchy = getCompleteHierarchy(node);
                 if (completeHierarchy.endsWith("/#text")) { // prevents double detection of attribute values;

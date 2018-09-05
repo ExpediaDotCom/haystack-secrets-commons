@@ -21,11 +21,11 @@ import com.expedia.open.tracing.Span;
 import com.expedia.open.tracing.Tag;
 import com.expedia.www.haystack.commons.secretDetector.DetectorBase;
 import com.expedia.www.haystack.commons.secretDetector.FinderNameAndServiceName;
+import com.expedia.www.haystack.commons.secretDetector.HaystackFinderEngine;
 import com.expedia.www.haystack.metrics.MetricObjects;
 import com.google.common.base.Strings;
 import com.netflix.servo.monitor.Counter;
 import com.netflix.servo.util.VisibleForTesting;
-import io.dataapps.chlorine.finder.FinderEngine;
 import org.apache.kafka.streams.kstream.ValueMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,17 +61,17 @@ public class SpanDetector extends DetectorBase implements ValueMapper<Span, Iter
 
     public SpanDetector(String bucket, String application) {
         this(LoggerFactory.getLogger(SpanDetector.class),
-                new FinderEngine(),
+                new HaystackFinderEngine(),
                 new Factory(),
                 new SpanS3ConfigFetcher(bucket, "secret-detector/whiteList.txt"), application);
     }
 
     public SpanDetector(Logger detectorLogger,
-                        FinderEngine finderEngine,
+                        HaystackFinderEngine haystackFinderEngine,
                         Factory detectorFactory,
                         SpanS3ConfigFetcher spanS3ConfigFetcher,
                         String application) {
-        super(finderEngine, spanS3ConfigFetcher);
+        super(haystackFinderEngine, spanS3ConfigFetcher);
         this.logger = detectorLogger;
         this.factory = detectorFactory;
         this.application = application;
@@ -98,11 +98,11 @@ public class SpanDetector extends DetectorBase implements ValueMapper<Span, Iter
         for (final Tag tag : tags) {
             if (!Strings.isNullOrEmpty(tag.getVStr())) {
                 final String input = tag.getVStr();
-                putKeysOfSecretsIntoMap(mapOfTypeToKeysOfSecrets, tag.getKey(), finderEngine.findWithType(input));
+                putKeysOfSecretsIntoMap(mapOfTypeToKeysOfSecrets, tag.getKey(), haystackFinderEngine.findWithType(input));
             } else if (!tag.getVBytes().isEmpty()) {
                 @SuppressWarnings("ObjectAllocationInLoop")
                 final String input = new String(tag.getVBytes().toByteArray());
-                putKeysOfSecretsIntoMap(mapOfTypeToKeysOfSecrets, tag.getKey(), finderEngine.findWithType(input));
+                putKeysOfSecretsIntoMap(mapOfTypeToKeysOfSecrets, tag.getKey(), haystackFinderEngine.findWithType(input));
             }
         }
     }

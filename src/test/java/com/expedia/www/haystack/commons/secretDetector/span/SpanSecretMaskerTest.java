@@ -24,7 +24,6 @@ import com.expedia.www.haystack.commons.secretDetector.HaystackFinderEngine;
 import com.expedia.www.haystack.commons.secretDetector.span.SpanSecretMasker.Factory;
 import com.expedia.www.haystack.metrics.MetricObjects;
 import com.netflix.servo.monitor.Counter;
-import io.dataapps.chlorine.finder.FinderEngine;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -69,7 +68,7 @@ import static org.mockito.Mockito.when;
 public class SpanSecretMaskerTest {
     private static final String APPLICATION = RANDOM.nextLong() + "APPLICATION";
     private static final String BUCKET = RANDOM.nextLong() + "BUCKET";
-    private static final FinderEngine FINDER_ENGINE = new HaystackFinderEngine();
+    private static final HaystackFinderEngine HAYSTACK_FINDER_ENGINE = new HaystackFinderEngine();
     private static final String EMAIL_FINDER_NAME_IN_FINDERS_DEFAULT_DOT_XML = "Email";
     private static final FinderNameAndServiceName EMAIL_FINDER_NAME_AND_SERVICE_NAME =
             new FinderNameAndServiceName(EMAIL_FINDER_NAME_IN_FINDERS_DEFAULT_DOT_XML, SERVICE_NAME);
@@ -101,7 +100,7 @@ public class SpanSecretMaskerTest {
     @Before
     public void setUp() {
         spanSecretMasker = new SpanSecretMasker(
-                FINDER_ENGINE, mockFactory, mockSpanS3ConfigFetcher, mockSpanNameAndCountRecorder, APPLICATION);
+                HAYSTACK_FINDER_ENGINE, mockFactory, mockSpanS3ConfigFetcher, mockSpanNameAndCountRecorder, APPLICATION);
         factory = new Factory(mockMetricObjects);
     }
 

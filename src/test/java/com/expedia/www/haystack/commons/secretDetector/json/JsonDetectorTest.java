@@ -22,7 +22,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import io.dataapps.chlorine.finder.FinderEngine;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -46,7 +45,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 @RunWith(MockitoJUnitRunner.class)
 public class JsonDetectorTest {
     private static final String BUCKET = RANDOM.nextLong() + "BUCKET";
-    private static final FinderEngine FINDER_ENGINE = new HaystackFinderEngine();
+    private static final HaystackFinderEngine HAYSTACK_FINDER_ENGINE = new HaystackFinderEngine();
     private static final String JSON_TEMPLATE =
             "{\"rootElement\": {\"childMap\": {\"childKey\":%s}, \"childArray\": [%s]}}";
     private static final String NOT_A_SECRET_STRING = "\"NotASecret\"";
@@ -60,7 +59,7 @@ public class JsonDetectorTest {
 
     @Before
     public void setUp() {
-        jsonDetector = new JsonDetector(FINDER_ENGINE, mockS3ConfigFetcher);
+        jsonDetector = new JsonDetector(HAYSTACK_FINDER_ENGINE, mockS3ConfigFetcher);
     }
 
     @After
