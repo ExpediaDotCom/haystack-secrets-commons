@@ -17,14 +17,9 @@
 package com.expedia.www.haystack.commons.secretDetector;
 
 import io.dataapps.chlorine.finder.FinderEngine;
-import io.dataapps.chlorine.pattern.RegexFinder;
 
 public final class HaystackFinderEngine extends FinderEngine {
     public HaystackFinderEngine() {
-        // default_finders.xml contains HaystackPhoneNumber finders, which are parsed by FinderEngine into RegexFinder
-        // objects that contain an empty pattern; remove them
-        getFinders().removeIf(next -> next instanceof RegexFinder
-                && ((RegexFinder) next).getPattern().toString().isEmpty());
-        // TODO Use HaystackFinderProvider to add the HaystackPhoneNumber finders
+        super((new HaystackFinderProvider()).getFinders(), false);
     }
 }
