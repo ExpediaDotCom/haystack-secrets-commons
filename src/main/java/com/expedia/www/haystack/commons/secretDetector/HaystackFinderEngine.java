@@ -16,10 +16,71 @@
  */
 package com.expedia.www.haystack.commons.secretDetector;
 
+import io.dataapps.chlorine.finder.Finder;
 import io.dataapps.chlorine.finder.FinderEngine;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 public class HaystackFinderEngine extends FinderEngine {
     public HaystackFinderEngine() {
         super((new HaystackFinderProvider()).getFinders(), false);
     }
+
+    @Override
+    public List<String> find(String input) {
+        final List<String> list = new ArrayList<>();
+        final Iterator<Finder> iterator = getFinders().iterator();
+        while(iterator.hasNext() && list.isEmpty()) {
+            final Finder finder = iterator.next();
+            list.addAll(finder.find(input));
+        }
+        return list;
+    }
+
+    @Override
+    public List<String> find(Collection<String> inputs) {
+        final List<String> list = new ArrayList<>();
+        final Iterator<Finder> iterator = getFinders().iterator();
+        while(iterator.hasNext() && list.isEmpty()) {
+            final Finder finder = iterator.next();
+            list.addAll(finder.find(inputs));
+        }
+        return list;
+    }
+
+    @Override
+    public Map<String, List<String>> findWithType(String input) {
+        final Map<String, List<String>> map = new HashMap<>();
+        final Iterator<Finder> iterator = getFinders().iterator();
+        while(iterator.hasNext() && map.isEmpty()) {
+            final Finder finder = iterator.next();
+            final List<String> matches = finder.find(input);
+            addToMap(map, finder, matches);
+        }
+        return map;
+    }
+
+    @Override
+    public Map<String, List<String>> findWithType(List<String> inputs) {
+        final Map<String, List<String>> map = new HashMap<>();
+        final Iterator<Finder> iterator = getFinders().iterator();
+        while(iterator.hasNext() && map.isEmpty()) {
+            final Finder finder = iterator.next();
+            final List<String> matches = finder.find(inputs);
+            addToMap(map, finder, matches);
+        }
+        return map;
+    }
+
+    private void addToMap(Map<String, List<String>> map, Finder finder, List<String> matches) {
+        if (!matches.isEmpty()) {
+            map.computeIfAbsent(finder.getName(), k -> new ArrayList<>()).addAll(matches);
+        }
+    }
+
 }
