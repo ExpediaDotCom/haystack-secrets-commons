@@ -1,5 +1,8 @@
 # Release Notes
 
+## 1.0.4 / 2018-09-06 Make HaystackFinderEngine non-final
+So Mockito can mock it in packages that use it (e.g. haystack-pipes)
+
 ## 1.0.3 / 2018-09-05 User HaystackFinderEngine everywhere
 Solves problems with using custom finders that are specified in default_finders.xml
 
