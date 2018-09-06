@@ -31,28 +31,7 @@ public class HaystackFinderEngine extends FinderEngine {
         super((new HaystackFinderProvider()).getFinders(), false);
     }
 
-    @Override
-    public List<String> find(String input) {
-        final List<String> list = new ArrayList<>();
-        final Iterator<Finder> iterator = getFinders().iterator();
-        while(iterator.hasNext() && list.isEmpty()) {
-            final Finder finder = iterator.next();
-            list.addAll(finder.find(input));
-        }
-        return list;
-    }
-
-    @Override
-    public List<String> find(Collection<String> inputs) {
-        final List<String> list = new ArrayList<>();
-        final Iterator<Finder> iterator = getFinders().iterator();
-        while(iterator.hasNext() && list.isEmpty()) {
-            final Finder finder = iterator.next();
-            list.addAll(finder.find(inputs));
-        }
-        return list;
-    }
-
+    // Override the method from CompositeFinder to quit checking once a secret is found.
     @Override
     public Map<String, List<String>> findWithType(String input) {
         final Map<String, List<String>> map = new HashMap<>();
@@ -60,18 +39,6 @@ public class HaystackFinderEngine extends FinderEngine {
         while(iterator.hasNext() && map.isEmpty()) {
             final Finder finder = iterator.next();
             final List<String> matches = finder.find(input);
-            addToMap(map, finder, matches);
-        }
-        return map;
-    }
-
-    @Override
-    public Map<String, List<String>> findWithType(List<String> inputs) {
-        final Map<String, List<String>> map = new HashMap<>();
-        final Iterator<Finder> iterator = getFinders().iterator();
-        while(iterator.hasNext() && map.isEmpty()) {
-            final Finder finder = iterator.next();
-            final List<String> matches = finder.find(inputs);
             addToMap(map, finder, matches);
         }
         return map;
