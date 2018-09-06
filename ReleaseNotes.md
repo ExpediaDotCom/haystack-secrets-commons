@@ -1,5 +1,11 @@
 # Release Notes
 
+## 1.0.6 / 2018-09-06 Add HaystackCompositePhoneNumberFinder
+The is the old "fat" phone number finder which is available for use if the "slim" finders are too slow
+
+## 1.0.5 / 2018-09-06 Stop looking for secrets once a secret is found
+This is to improve performance
+
 ## 1.0.4 / 2018-09-06 Make HaystackFinderEngine non-final
 So Mockito can mock it in packages that use it (e.g. haystack-pipes)
 
