@@ -19,10 +19,10 @@ package com.expedia.www.haystack.commons.secretDetector.span;
 import com.expedia.open.tracing.Log;
 import com.expedia.open.tracing.Span;
 import com.expedia.open.tracing.Tag;
+import com.expedia.www.haystack.commons.secretDetector.DetectorTestBase;
 import com.expedia.www.haystack.commons.secretDetector.FinderNameAndServiceName;
 import com.expedia.www.haystack.commons.secretDetector.HaystackFinderEngine;
 import com.expedia.www.haystack.commons.secretDetector.span.SpanSecretMasker.Factory;
-import com.expedia.www.haystack.metrics.MetricObjects;
 import com.netflix.servo.monitor.Counter;
 import org.junit.After;
 import org.junit.Before;
@@ -65,10 +65,8 @@ import static org.mockito.Mockito.when;
 
 @SuppressWarnings({"CallToSuspiciousStringMethod", "ConstantConditions"})
 @RunWith(MockitoJUnitRunner.class)
-public class SpanSecretMaskerTest {
-    private static final String APPLICATION = RANDOM.nextLong() + "APPLICATION";
+public class SpanSecretMaskerTest extends DetectorTestBase {
     private static final String BUCKET = RANDOM.nextLong() + "BUCKET";
-    private static final HaystackFinderEngine HAYSTACK_FINDER_ENGINE = new HaystackFinderEngine();
     private static final String EMAIL_FINDER_NAME_IN_FINDERS_DEFAULT_DOT_XML = "Email";
     private static final FinderNameAndServiceName EMAIL_FINDER_NAME_AND_SERVICE_NAME =
             new FinderNameAndServiceName(EMAIL_FINDER_NAME_IN_FINDERS_DEFAULT_DOT_XML, SERVICE_NAME);
@@ -89,9 +87,6 @@ public class SpanSecretMaskerTest {
     private Counter mockCounter;
 
     @Mock
-    private MetricObjects mockMetricObjects;
-
-    @Mock
     private SpanNameAndCountRecorder mockSpanNameAndCountRecorder;
 
     private SpanSecretMasker spanSecretMasker;
@@ -99,8 +94,10 @@ public class SpanSecretMaskerTest {
 
     @Before
     public void setUp() {
+        final HaystackFinderEngine haystackFinderEngine =
+                new HaystackFinderEngine(mockMetricObjects, SUBSYSTEM, APPLICATION);
         spanSecretMasker = new SpanSecretMasker(
-                HAYSTACK_FINDER_ENGINE, mockFactory, mockSpanS3ConfigFetcher, mockSpanNameAndCountRecorder, APPLICATION);
+                haystackFinderEngine, mockFactory, mockSpanS3ConfigFetcher, mockSpanNameAndCountRecorder, APPLICATION);
         factory = new Factory(mockMetricObjects);
     }
 
@@ -111,24 +108,27 @@ public class SpanSecretMaskerTest {
         verifyNoMoreInteractions(mockFactory);
         verifyNoMoreInteractions(mockSpanS3ConfigFetcher);
         verifyNoMoreInteractions(mockCounter);
-        verifyNoMoreInteractions(mockMetricObjects);
         verifyNoMoreInteractions(mockSpanNameAndCountRecorder);
     }
 
     @Test
     public void testSmallConstructor() {
-        new SpanSecretMasker(BUCKET, APPLICATION);
+        new SpanSecretMasker(BUCKET, SUBSYSTEM, APPLICATION);
     }
 
     @Test
     public void testApplyNoSecret() {
+        whensForFindSecrets();
+
         final Span span = spanSecretMasker.apply(FULLY_POPULATED_SPAN);
 
         assertEquals(FULLY_POPULATED_SPAN, span);
+        verifiesForFindSecrets(52, 1);
     }
 
     @Test
     public void testFindSecretsHaystackEmailAddressInTagString() {
+        whensForFindSecrets();
         when(mockFactory.createCounter(any(), anyString())).thenReturn(mockCounter);
 
         final Span span = spanSecretMasker.apply(EMAIL_ADDRESS_SPAN);
@@ -141,10 +141,12 @@ public class SpanSecretMaskerTest {
         verify(mockCounter).increment();
         verify(mockSpanNameAndCountRecorder).add(
                 EMAIL_FINDER_NAME_IN_FINDERS_DEFAULT_DOT_XML, SERVICE_NAME, OPERATION_NAME, STRING_TAG_KEY);
+        verifiesForFindSecrets(40, 1);
     }
 
     @Test
     public void testFindSecretsHaystackEmailAddressInTagStringTagWhitelisted() {
+        whensForFindSecrets();
         when(mockSpanS3ConfigFetcher.isInWhiteList(Matchers.<String>anyVararg())).thenReturn(true);
         when(mockFactory.createCounter(any(), anyString())).thenReturn(mockCounter);
 
@@ -153,10 +155,12 @@ public class SpanSecretMaskerTest {
         assertEquals(EMAIL_ADDRESS_SPAN, span);
         verify(mockSpanS3ConfigFetcher).isInWhiteList(
                 EMAIL_FINDER_NAME_IN_FINDERS_DEFAULT_DOT_XML, SERVICE_NAME, OPERATION_NAME, STRING_TAG_KEY);
+        verifiesForFindSecrets(40, 1);
     }
 
     @Test
     public void testFindSecretsHaystackEmailAddressInTagStringAndTagBytesAndIpAddressInTagBytes() {
+        whensForFindSecrets();
         when(mockFactory.createCounter(any(), anyString())).thenReturn(mockCounter);
 
         final Span span = spanSecretMasker.apply(EMAIL_ADDRESSES_AND_IP_ADDRESS_SPAN);
@@ -180,11 +184,13 @@ public class SpanSecretMaskerTest {
                 EMAIL_FINDER_NAME_IN_FINDERS_DEFAULT_DOT_XML, SERVICE_NAME, OPERATION_NAME, BYTES_FIELD_KEY);
         verify(mockSpanNameAndCountRecorder).add(
                 IP_FINDER_NAME, SERVICE_NAME, OPERATION_NAME, STRING_TAG_KEY);
+        verifiesForFindSecrets(18, 1);
     }
 
     @SuppressWarnings("MethodWithMultipleLoops")
     @Test
     public void testFindSecretsHaystackEmailAddressInTagBytesAndLogBytes() {
+        whensForFindSecrets();
         when(mockFactory.createCounter(any(), anyString())).thenReturn(mockCounter);
 
         final Span span = spanSecretMasker.apply(EMAIL_ADDRESS_IN_TAG_BYTES_AND_LOG_BYTES_SPAN);
@@ -202,11 +208,13 @@ public class SpanSecretMaskerTest {
                 EMAIL_FINDER_NAME_IN_FINDERS_DEFAULT_DOT_XML, SERVICE_NAME, OPERATION_NAME, BYTES_TAG_KEY);
         verify(mockSpanNameAndCountRecorder).add(
                 EMAIL_FINDER_NAME_IN_FINDERS_DEFAULT_DOT_XML, SERVICE_NAME, OPERATION_NAME, BYTES_FIELD_KEY);
+        verifiesForFindSecrets(28, 1);
     }
 
     @SuppressWarnings("MethodWithMultipleLoops")
     @Test
     public void testFindSecretsHaystackEmailAddressInLogString() {
+        whensForFindSecrets();
         when(mockFactory.createCounter(any(), anyString())).thenReturn(mockCounter);
 
         final Span span = spanSecretMasker.apply(EMAIL_ADDRESS_LOG_SPAN_TAG_AND_VBYTES);
@@ -227,6 +235,7 @@ public class SpanSecretMaskerTest {
                 EMAIL_FINDER_NAME_IN_FINDERS_DEFAULT_DOT_XML, SERVICE_NAME, OPERATION_NAME, STRING_FIELD_KEY);
         verify(mockSpanNameAndCountRecorder).add(
                 EMAIL_FINDER_NAME_IN_FINDERS_DEFAULT_DOT_XML, SERVICE_NAME, OPERATION_NAME, BYTES_FIELD_KEY);
+        verifiesForFindSecrets(16, 1);
     }
 
     private static Tag findTag(Span span, String key) {

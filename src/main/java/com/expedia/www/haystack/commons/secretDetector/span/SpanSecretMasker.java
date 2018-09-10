@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static com.expedia.www.haystack.commons.config.Configuration.WHITELIST_S3_ITEM_NAME;
 import static com.expedia.www.haystack.commons.secretDetector.span.SpanDetector.ERRORS_METRIC_GROUP;
 
 /**
@@ -60,11 +61,11 @@ public class SpanSecretMasker extends DetectorBase implements ValueMapper<Span, 
     private final String application;
     private final SpanNameAndCountRecorder spanNameAndCountRecorder;
 
-    public SpanSecretMasker(String bucket, String application) {
+    public SpanSecretMasker(String bucket, String subsystem, String application) {
         //noinspection LoggerInitializedWithForeignClass
-        this(new HaystackFinderEngine(),
+        this(new HaystackFinderEngine(new MetricObjects(), subsystem, application),
                 new Factory(),
-                new SpanS3ConfigFetcher(bucket, "secret-detector/whiteListItems.txt"),
+                new SpanS3ConfigFetcher(bucket, WHITELIST_S3_ITEM_NAME),
                 new SpanNameAndCountRecorder(LoggerFactory.getLogger(SpanNameAndCountRecorder.class), Clock.systemUTC()),
                 application);
     }

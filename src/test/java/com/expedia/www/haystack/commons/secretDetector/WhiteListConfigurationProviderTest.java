@@ -22,6 +22,7 @@ import org.cfg4j.provider.ConfigurationProvider;
 import org.junit.Before;
 import org.junit.Test;
 
+import static com.expedia.www.haystack.commons.config.Configuration.WHITELIST_S3_ITEM_NAME;
 import static org.junit.Assert.assertEquals;
 
 public class WhiteListConfigurationProviderTest {
@@ -41,6 +42,6 @@ public class WhiteListConfigurationProviderTest {
 
     @Test
     public void testKey() {
-        assertEquals("secret-detector/whiteListItems.txt", whiteListConfigurationProvider.key());
+        assertEquals(WHITELIST_S3_ITEM_NAME, whiteListConfigurationProvider.key());
     }
 }

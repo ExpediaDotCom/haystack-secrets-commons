@@ -16,12 +16,12 @@
  */
 package com.expedia.www.haystack.commons.secretDetector.span;
 
+import com.expedia.www.haystack.commons.secretDetector.DetectorTestBase;
 import com.expedia.www.haystack.commons.secretDetector.FinderNameAndServiceName;
 import com.expedia.www.haystack.commons.secretDetector.HaystackFinderEngine;
 import com.expedia.www.haystack.commons.secretDetector.NonLocalIpV4AddressFinder;
 import com.expedia.www.haystack.commons.secretDetector.TestConstantsAndCommonCode;
 import com.expedia.www.haystack.commons.secretDetector.span.SpanDetector.Factory;
-import com.expedia.www.haystack.metrics.MetricObjects;
 import com.netflix.servo.monitor.Counter;
 import org.junit.After;
 import org.junit.Before;
@@ -66,12 +66,10 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
-public class SpanDetectorTest {
-    private static final String APPLICATION = RANDOM.nextLong() + "APPLICATION";
+public class SpanDetectorTest extends DetectorTestBase {
     private static final String BUCKET = RANDOM.nextLong() + "BUCKET";
     private static final String FINDER_NAME = RANDOM.nextLong() + "FINDER_NAME";
     private static final String SERVICE_NAME = RANDOM.nextLong() + "SERVICE_NAME";
-    private static final HaystackFinderEngine HAYSTACK_FINDER_ENGINE = new HaystackFinderEngine();
     private static final String CREDIT_CARD_FINDER_NAME = "Credit_Card";
     private static final String CREDIT_CARD_FINDER_NAME_IN_FINDERS_DEFAULT_DOT_XML = CREDIT_CARD_FINDER_NAME;
     private static final String EMAIL_FINDER_NAME_IN_FINDERS_DEFAULT_DOT_XML = "Email";
@@ -90,9 +88,6 @@ public class SpanDetectorTest {
     private Counter mockCounter;
 
     @Mock
-    private MetricObjects mockMetricObjects;
-
-    @Mock
     private SpanS3ConfigFetcher mockSpanS3ConfigFetcher;
 
     private SpanDetector spanDetector;
@@ -100,31 +95,43 @@ public class SpanDetectorTest {
 
     @Before
     public void setUp() {
-        spanDetector = new SpanDetector(mockLogger, HAYSTACK_FINDER_ENGINE, mockFactory, mockSpanS3ConfigFetcher, APPLICATION);
+        final HaystackFinderEngine haystackFinderEngine =
+                new HaystackFinderEngine(mockMetricObjects, SUBSYSTEM, APPLICATION);
+        spanDetector = new SpanDetector(
+                mockLogger, haystackFinderEngine, mockFactory, mockSpanS3ConfigFetcher, APPLICATION);
         factory = new Factory(mockMetricObjects);
     }
 
     @After
     public void tearDown() {
         SpanDetector.COUNTERS.clear();
-        verifyNoMoreInteractions(mockLogger, mockFactory, mockCounter, mockMetricObjects, mockSpanS3ConfigFetcher);
+        verifyNoMoreInteractions(mockLogger);
+        verifyNoMoreInteractions(mockFactory);
+        verifyNoMoreInteractions(mockCounter);
+        verifyNoMoreInteractions(mockSpanS3ConfigFetcher);
     }
 
     @Test
     public void testSmallConstructor() {
-        new SpanDetector(BUCKET, APPLICATION);
+        new SpanDetector(BUCKET, SUBSYSTEM, APPLICATION);
     }
 
     @Test
     public void testFindSecretsHaystackEmailAddress() {
+        whensForFindSecrets();
         when(mockFactory.createCounter(any(), anyString())).thenReturn(mockCounter);
+
         final Map<String, List<String>> secrets = spanDetector.findSecrets(EMAIL_ADDRESS_SPAN);
+
         verifyHaystackEmailAddressFound(secrets, STRING_TAG_KEY);
+        verifiesForFindSecrets(40, 1);
     }
 
     @Test
     public void testFindSecretsHaystackEmailAddressInTagBytes() {
+        whensForFindSecrets();
         when(mockFactory.createCounter(any(), anyString())).thenReturn(mockCounter);
+
         final Map<String, List<String>> secrets = spanDetector.findSecrets(EMAIL_ADDRESS_IN_TAG_BYTES_AND_LOG_BYTES_SPAN);
 
         assertEquals(1, secrets.size());
@@ -133,14 +140,18 @@ public class SpanDetectorTest {
         final Iterator<String> iterator = tagsThatContainEmails.iterator();
         assertEquals(BYTES_TAG_KEY, iterator.next());
         assertEquals(BYTES_FIELD_KEY, iterator.next());
+        verifiesForFindSecrets(28, 1);
     }
 
     @Test
     public void testFindSecretsHaystackEmailAddressInLog() {
+        whensForFindSecrets();
         when(mockFactory.createCounter(any(), anyString())).thenReturn(mockCounter);
+
         final Map<String, List<String>> secrets = spanDetector.findSecrets(EMAIL_ADDRESS_LOG_SPAN_TAG_AND_VBYTES);
 
         verifyHaystackEmailAddressFound(secrets, BYTES_TAG_KEY, STRING_FIELD_KEY, BYTES_FIELD_KEY);
+        verifiesForFindSecrets(16, 1);
     }
 
     private static void verifyHaystackEmailAddressFound(Map<String, List<String>> secrets, String... keysOfSecret) {
@@ -156,27 +167,38 @@ public class SpanDetectorTest {
 
     @Test
     public void testFindSecretsIpAddress() {
+        whensForFindSecrets();
         when(mockFactory.createCounter(any(), anyString())).thenReturn(mockCounter);
         final Map<String, List<String>> secrets = spanDetector.findSecrets(IP_ADDRESS_SPAN);
 
         assertEquals(IP_ADDRESS + " should have been flagged as a secret", 1, secrets.size());
         assertEquals(IP_FINDER_NAME, secrets.keySet().iterator().next());
         assertEquals(STRING_TAG_KEY, secrets.get(IP_FINDER_NAME).iterator().next());
+        verifiesForFindSecrets(42, 1);
     }
 
     @Test
     public void testFindSecretsNoSecret() {
+        whensForFindSecrets();
+
         assertTrue(spanDetector.findSecrets(FULLY_POPULATED_SPAN).isEmpty());
+
+        verifiesForFindSecrets(52, 1);
     }
 
     @Test
     public void testApplyNoSecret() {
+        whensForFindSecrets();
+
         final Iterable<String> iterable = spanDetector.apply(FULLY_POPULATED_SPAN);
+
         assertFalse(iterable.iterator().hasNext());
+        verifiesForFindSecrets(52, 1);
     }
 
     @Test
     public void testApplyCreditCardInLog() {
+        whensForFindSecrets();
         when(mockFactory.createCounter(any(), anyString())).thenReturn(mockCounter);
         when(mockSpanS3ConfigFetcher.isInWhiteList(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(false);
@@ -193,10 +215,12 @@ public class SpanDetectorTest {
             verify(mockLogger).info(emailText);
         }
         verifyCounterIncrement();
+        verifiesForFindSecrets(41, 1);
     }
 
     @Test
     public void testApplyEMailAddressInLog() {
+        whensForFindSecrets();
         when(mockFactory.createCounter(any(), anyString())).thenReturn(mockCounter);
         when(mockSpanS3ConfigFetcher.isInWhiteList(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(true, false);
@@ -216,6 +240,7 @@ public class SpanDetectorTest {
                 new FinderNameAndServiceName("Email", TestConstantsAndCommonCode.SERVICE_NAME);
         verify(mockFactory).createCounter(finderNameAndServiceName, APPLICATION);
         verify(mockCounter).increment();
+        verifiesForFindSecrets(80, 1);
     }
 
     private void verifyCounterIncrement() {

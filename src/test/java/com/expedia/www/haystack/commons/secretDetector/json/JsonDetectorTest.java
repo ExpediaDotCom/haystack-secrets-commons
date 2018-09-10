@@ -16,6 +16,7 @@
  */
 package com.expedia.www.haystack.commons.secretDetector.json;
 
+import com.expedia.www.haystack.commons.secretDetector.DetectorTestBase;
 import com.expedia.www.haystack.commons.secretDetector.HaystackFinderEngine;
 import com.expedia.www.haystack.commons.secretDetector.S3ConfigFetcher;
 import com.google.gson.Gson;
@@ -43,9 +44,8 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 @RunWith(MockitoJUnitRunner.class)
-public class JsonDetectorTest {
+public class JsonDetectorTest extends DetectorTestBase {
     private static final String BUCKET = RANDOM.nextLong() + "BUCKET";
-    private static final HaystackFinderEngine HAYSTACK_FINDER_ENGINE = new HaystackFinderEngine();
     private static final String JSON_TEMPLATE =
             "{\"rootElement\": {\"childMap\": {\"childKey\":%s}, \"childArray\": [%s]}}";
     private static final String NOT_A_SECRET_STRING = "\"NotASecret\"";
@@ -59,7 +59,9 @@ public class JsonDetectorTest {
 
     @Before
     public void setUp() {
-        jsonDetector = new JsonDetector(HAYSTACK_FINDER_ENGINE, mockS3ConfigFetcher);
+        final HaystackFinderEngine haystackFinderEngine =
+                new HaystackFinderEngine(mockMetricObjects, SUBSYSTEM, APPLICATION);
+        jsonDetector = new JsonDetector(haystackFinderEngine, mockS3ConfigFetcher);
     }
 
     @After
@@ -69,19 +71,24 @@ public class JsonDetectorTest {
 
     @Test
     public void testSmallConstructor() {
-        new JsonDetector(BUCKET);
+        new JsonDetector(BUCKET, SUBSYSTEM, APPLICATION);
     }
 
     @Test
     public void testFindSecretsNoSecrets() {
+        whensForFindSecrets();
+
         final Map<String, List<String>> secrets =
                 jsonDetector.findSecrets(createJsonString(NOT_A_SECRET_STRING, NOT_A_SECRET_STRING));
 
         assertTrue(secrets.isEmpty());
+        verifiesForFindSecrets(26, 1);
     }
 
     @Test
     public void testFindSecretEmailInMap() {
+        whensForFindSecrets();
+
         final Map<String, List<String>> secrets =
                 jsonDetector.findSecrets(createJsonString(EMAIL_ADDRESS_WITH_QUOTES, NOT_A_SECRET_STRING));
 
@@ -90,10 +97,13 @@ public class JsonDetectorTest {
         final Collection<List<String>> values = secrets.values();
         assertEquals(1, values.size());
         assertEquals("rootElement.childMap.childKey", values.iterator().next().get(0));
+        verifiesForFindSecrets(14, 1);
     }
 
     @Test
     public void testFindSecretsEmailInArray() {
+        whensForFindSecrets();
+
         final Map<String, List<String>> secrets =
                 jsonDetector.findSecrets(createJsonString(NOT_A_SECRET_STRING, EMAIL_ADDRESS_WITH_QUOTES));
 
@@ -102,10 +112,13 @@ public class JsonDetectorTest {
         final Collection<List<String>> values = secrets.values();
         assertEquals(1, values.size());
         assertEquals("rootElement.childArray.[0]", values.iterator().next().get(0));
+        verifiesForFindSecrets(14, 1);
     }
 
     @Test
     public void testFindSecretsEmailInMapAndArray() {
+        whensForFindSecrets();
+
         final Map<String, List<String>> secrets =
                 jsonDetector.findSecrets(createJsonString(EMAIL_ADDRESS_WITH_QUOTES, EMAIL_ADDRESS_WITH_QUOTES));
 
@@ -116,6 +129,7 @@ public class JsonDetectorTest {
         final List<String> ids = values.iterator().next();
         assertEquals("rootElement.childMap.childKey", ids.get(0));
         assertEquals("rootElement.childArray.[0]", ids.get(1));
+        verifiesForFindSecrets(2, 0);
     }
 
     private static JsonObject createJsonString(String mapValue, String arrayValue) {

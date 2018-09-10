@@ -1,5 +1,9 @@
 # Release Notes
 
+## 1.0.7 / 2018-09-10 Time calls to find()
+New metrics (created in HaystackFinderEngine) for each call to a finder's find() method; this will give us an average
+duration metric, and count metric, to help determine what finders might need to be sped up
+
 ## 1.0.6 / 2018-09-06 Add HaystackCompositePhoneNumberFinder
 The is the old "fat" phone number finder which is available for use if the "slim" finders are too slow
 
