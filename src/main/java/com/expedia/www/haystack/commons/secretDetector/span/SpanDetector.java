@@ -38,6 +38,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static com.expedia.www.haystack.commons.config.Configuration.WHITELIST_S3_ITEM_NAME;
+
 /**
  * Finds that tag keys and field keys in a Span that contain secrets.
  */
@@ -59,11 +61,11 @@ public class SpanDetector extends DetectorBase implements ValueMapper<Span, Iter
     private final Factory factory;
     private final String application;
 
-    public SpanDetector(String bucket, String application) {
+    public SpanDetector(String bucket, String subsystem, String application) {
         this(LoggerFactory.getLogger(SpanDetector.class),
-                new HaystackFinderEngine(),
+                new HaystackFinderEngine(new MetricObjects(), subsystem, application),
                 new Factory(),
-                new SpanS3ConfigFetcher(bucket, "secret-detector/whiteList.txt"), application);
+                new SpanS3ConfigFetcher(bucket, WHITELIST_S3_ITEM_NAME), application);
     }
 
     public SpanDetector(Logger detectorLogger,

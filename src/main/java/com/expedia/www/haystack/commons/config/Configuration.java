@@ -28,6 +28,8 @@ import java.util.Collections;
 
 @SuppressWarnings("WeakerAccess")
 public class Configuration {
+    public final static String WHITELIST_S3_ITEM_NAME = "secret-detector/whiteListItems.txt";
+
     public ConfigurationProvider createMergeConfigurationProvider() {
         final MergeConfigurationSource configurationSource = new MergeConfigurationSource(
                 createClasspathConfigurationSource(), createEnvironmentConfigurationSource()

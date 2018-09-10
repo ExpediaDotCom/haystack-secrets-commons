@@ -16,9 +16,9 @@
  */
 package com.expedia.www.haystack.commons.secretDetector.xml;
 
+import com.expedia.www.haystack.commons.secretDetector.DetectorTestBase;
 import com.expedia.www.haystack.commons.secretDetector.HaystackFinderEngine;
 import com.expedia.www.haystack.commons.secretDetector.S3ConfigFetcher;
-import com.expedia.www.haystack.metrics.MetricObjects;
 import com.netflix.servo.monitor.Counter;
 import org.junit.After;
 import org.junit.Before;
@@ -43,9 +43,8 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 @SuppressWarnings("MultipleExceptionsDeclaredOnTestMethod")
 @RunWith(MockitoJUnitRunner.class)
-public class XmlDetectorTest {
+public class XmlDetectorTest extends DetectorTestBase {
     private static final String BUCKET = RANDOM.nextLong() + "BUCKET";
-    private static final HaystackFinderEngine HAYSTACK_FINDER_ENGINE = new HaystackFinderEngine();
     private static final String XML_TEMPLATE =
             "<rootElement rootAttribute='%s'>%s<childElement childAttribute='%s'>%s</childElement></rootElement>";
     private static final String NOT_A_SECRET = "NotASecret";
@@ -72,52 +71,57 @@ public class XmlDetectorTest {
     private Counter mockCounter;
 
     @Mock
-    private MetricObjects mockMetricObjects;
-
-    @Mock
     private S3ConfigFetcher mockS3ConfigFetcher;
 
     private XmlDetector xmlDetector;
 
     @Before
     public void setUp() {
-        xmlDetector = new XmlDetector(HAYSTACK_FINDER_ENGINE, mockS3ConfigFetcher);
+        final HaystackFinderEngine haystackFinderEngine =
+                new HaystackFinderEngine(mockMetricObjects, SUBSYSTEM, APPLICATION);
+        xmlDetector = new XmlDetector(haystackFinderEngine, mockS3ConfigFetcher);
     }
 
     @After
     public void tearDown() {
-        verifyNoMoreInteractions(mockLogger, mockCounter, mockMetricObjects, mockS3ConfigFetcher);
+        verifyNoMoreInteractions(mockLogger);
+        verifyNoMoreInteractions(mockCounter);
+        verifyNoMoreInteractions(mockS3ConfigFetcher);
     }
 
     @Test
     public void testSmallConstructor() {
-        new XmlDetector(BUCKET);
+        new XmlDetector(BUCKET, SUBSYSTEM, APPLICATION);
     }
 
     @Test
     public void testFindSecretsNoSecrets() {
+        whensForFindSecrets();
+
         final Map<String, List<String>> secrets = xmlDetector.findSecrets(DOCUMENT_NO_SECRETS);
+
         assertTrue(secrets.isEmpty());
+        verifiesForFindSecrets(78, 1);
     }
 
     @Test
     public void testFindSecretsEmailAddressInRootElementAttribute() {
-        testFindSecretsContainsSecret(DOCUMENT_EMAIL_IN_ROOT_ATTRIBUTE, DOCUMENT_EMAIL_IN_ROOT_ATTRIBUTE_ID);
+        testFindSecretsContainsSecret(DOCUMENT_EMAIL_IN_ROOT_ATTRIBUTE, DOCUMENT_EMAIL_IN_ROOT_ATTRIBUTE_ID, 54);
     }
 
     @Test
     public void testFindSecretsEmailAddressInRootElementText() {
-        testFindSecretsContainsSecret(DOCUMENT_EMAIL_IN_ROOT_TEXT, DOCUMENT_EMAIL_IN_ROOT_TEXT_ID);
+        testFindSecretsContainsSecret(DOCUMENT_EMAIL_IN_ROOT_TEXT, DOCUMENT_EMAIL_IN_ROOT_TEXT_ID, 66);
     }
 
     @Test
     public void testFindSecretsEmailAddressInChildElementAttribute() {
-        testFindSecretsContainsSecret(DOCUMENT_EMAIL_IN_CHILD_ATTRIBUTE, DOCUMENT_EMAIL_IN_CHILD_ATTRIBUTE_ID);
+        testFindSecretsContainsSecret(DOCUMENT_EMAIL_IN_CHILD_ATTRIBUTE, DOCUMENT_EMAIL_IN_CHILD_ATTRIBUTE_ID, 54);
     }
 
     @Test
     public void testFindSecretsEmailAddressInChildElementText() {
-        testFindSecretsContainsSecret(DOCUMENT_EMAIL_IN_CHILD_TEXT, DOCUMENT_EMAIL_IN_CHILD_TEXT_ID);
+        testFindSecretsContainsSecret(DOCUMENT_EMAIL_IN_CHILD_TEXT, DOCUMENT_EMAIL_IN_CHILD_TEXT_ID, 66);
     }
 /*
     @Test
@@ -180,7 +184,8 @@ public class XmlDetectorTest {
         verify(mockS3ConfigFetcher).isInWhiteList("Email", id);
     }
 */
-    private void testFindSecretsContainsSecret(Document document, String expected) {
+    private void testFindSecretsContainsSecret(Document document, String expected, int wantedNumberOfInvocationsStartAndStop) {
+        whensForFindSecrets();
         final Map<String, List<String>> secrets = xmlDetector.findSecrets(document);
         assertEquals(1, secrets.size());
         for (Map.Entry<String, List<String>> finderNameToSecrets : secrets.entrySet()) {
@@ -189,6 +194,7 @@ public class XmlDetectorTest {
             assertEquals(1, value.size());
             assertEquals(expected, value.get(0));
         }
+        verifiesForFindSecrets(wantedNumberOfInvocationsStartAndStop, 1);
     }
 
     private static Document createDocument(String rootAttributeValue,

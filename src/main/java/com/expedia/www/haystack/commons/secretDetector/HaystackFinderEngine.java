@@ -16,29 +16,53 @@
  */
 package com.expedia.www.haystack.commons.secretDetector;
 
+import com.expedia.www.haystack.metrics.MetricObjects;
+import com.netflix.servo.monitor.Stopwatch;
+import com.netflix.servo.monitor.Timer;
 import io.dataapps.chlorine.finder.Finder;
 import io.dataapps.chlorine.finder.FinderEngine;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 public class HaystackFinderEngine extends FinderEngine {
-    public HaystackFinderEngine() {
+    private final MetricObjects metricObjects;
+    private final String subsystem;
+    private final String application;
+    private final Map<String, Timer> timerMap;
+
+    public HaystackFinderEngine(MetricObjects metricObjects, String subsystem, String application) {
         super((new HaystackFinderProvider()).getFinders(), false);
+        this.metricObjects = metricObjects;
+        this.subsystem = subsystem;
+        this.application = application;
+        timerMap = new ConcurrentHashMap<>();
     }
 
     // Override the method from CompositeFinder to quit checking once a secret is found.
+    // Also measure the time that each timer takes to run.
     @Override
     public Map<String, List<String>> findWithType(String input) {
         final Map<String, List<String>> map = new HashMap<>();
         final Iterator<Finder> iterator = getFinders().iterator();
         while(iterator.hasNext() && map.isEmpty()) {
             final Finder finder = iterator.next();
+            final String name = finder.getName();
+            final Timer timer = timerMap.computeIfAbsent(name, k -> {
+                final String klass = finder.getClass().getName();
+                final String upperCase = name.toUpperCase();
+                return metricObjects.createAndRegisterBasicTimer(
+                        subsystem, application, klass, upperCase, MILLISECONDS);
+            });
+            final Stopwatch stopwatch = timer.start();
             final List<String> matches = finder.find(input);
+            stopwatch.stop();
             addToMap(map, finder, matches);
         }
         return map;

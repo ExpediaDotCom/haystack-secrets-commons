@@ -19,6 +19,7 @@ package com.expedia.www.haystack.commons.secretDetector.xml;
 import com.expedia.www.haystack.commons.secretDetector.DetectorBase;
 import com.expedia.www.haystack.commons.secretDetector.HaystackFinderEngine;
 import com.expedia.www.haystack.commons.secretDetector.S3ConfigFetcher;
+import com.expedia.www.haystack.metrics.MetricObjects;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
@@ -30,6 +31,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import static com.expedia.www.haystack.commons.config.Configuration.WHITELIST_S3_ITEM_NAME;
+
 /**
  * Finds the names of elements or attributes whose values are secrets.
  */
@@ -37,8 +40,9 @@ import java.util.Map;
 public class XmlDetector extends DetectorBase {
     private static final String[] ZERO_LENGTH_STRING_ARRAY = new String[0];
 
-    public XmlDetector(String bucket) {
-        this(new HaystackFinderEngine(), new S3ConfigFetcher(bucket, "secret-detector/xmlWhiteListItems.txt"));
+    public XmlDetector(String bucket, String subsystem, String application) {
+        this(new HaystackFinderEngine(new MetricObjects(), subsystem, application),
+                new S3ConfigFetcher(bucket, WHITELIST_S3_ITEM_NAME));
     }
 
     public XmlDetector(HaystackFinderEngine haystackFinderEngine, S3ConfigFetcher s3ConfigFetcher) {

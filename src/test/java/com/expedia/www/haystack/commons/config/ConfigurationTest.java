@@ -23,6 +23,7 @@ import org.junit.Test;
 import java.util.Map;
 import java.util.Properties;
 
+import static com.expedia.www.haystack.commons.config.Configuration.WHITELIST_S3_ITEM_NAME;
 import static org.junit.Assert.assertEquals;
 
 @SuppressWarnings("WeakerAccess")
@@ -32,7 +33,7 @@ public class ConfigurationTest {
 
     private final static Object[][] TEST_DATA = {
             {WHITELIST_BUCKET, "haystack-config"},
-            {WHITELIST_KEY, "secret-detector/whiteListItems.txt"},
+            {WHITELIST_KEY, WHITELIST_S3_ITEM_NAME},
     };
     private static final char UNDERSCORE = '_';
     private static final char PERIOD = '.';
