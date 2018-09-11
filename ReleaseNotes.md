@@ -1,5 +1,8 @@
 # Release Notes
 
+## 1.0.8 / 2018-09-11 Time calls to find()
+Use underscore delimited names for finders so that they are more readable in Grafana
+
 ## 1.0.7 / 2018-09-10 Time calls to find()
 New metrics (created in HaystackFinderEngine) for each call to a finder's find() method; this will give us an average
 duration metric, and count metric, to help determine what finders might need to be sped up

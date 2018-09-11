@@ -80,10 +80,7 @@ public class HaystackPhoneNumberFinderTest {
 
     @Test
     public void testGetName() {
-        final String expected = HaystackPhoneNumberFinder.class.getSimpleName()
-                .replace("Haystack", "")
-                .replace("Finder", "");
-        assertEquals(expected, haystackPhoneNumberFinderUS.getName());
+        assertEquals(HaystackPhoneNumberFinder.FINDER_NAME, haystackPhoneNumberFinderUS.getName());
     }
 
     @Test

@@ -55,11 +55,11 @@ public class HaystackCompositePhoneNumberFinderTest {
     @Mock
     private PhoneNumberUtil mockPhoneNumberUtil;
 
-    private HaystackCompositePhoneNumberFinder HaystackCompositePhoneNumberFinder;
+    private HaystackCompositePhoneNumberFinder haystackCompositePhoneNumberFinder;
 
     @Before
     public void setUp() {
-        HaystackCompositePhoneNumberFinder = new HaystackCompositePhoneNumberFinder();
+        haystackCompositePhoneNumberFinder = new HaystackCompositePhoneNumberFinder();
     }
 
     @After
@@ -72,13 +72,13 @@ public class HaystackCompositePhoneNumberFinderTest {
         final String expected = HaystackCompositePhoneNumberFinder.class.getSimpleName()
                 .replace("HaystackComposite", "")
                 .replace("Finder", "");
-        assertEquals(expected, HaystackCompositePhoneNumberFinder.getName());
+        assertEquals(HaystackCompositePhoneNumberFinder.FINDER_NAME, haystackCompositePhoneNumberFinder.getName());
     }
 
     @Test
     public void testFindStringValidNumbers() {
         for (String phoneNumber : VALID_PHONE_NUMBERS) {
-            final List<String> strings = HaystackCompositePhoneNumberFinder.find(phoneNumber);
+            final List<String> strings = haystackCompositePhoneNumberFinder.find(phoneNumber);
             assertEquals(phoneNumber, 1, strings.size());
         }
     }
@@ -86,7 +86,7 @@ public class HaystackCompositePhoneNumberFinderTest {
     @Test
     public void testFindStringInvalidNumber() {
         for (String phoneNumber : INVALID_US_PHONE_NUMBERS) {
-            final List<String> strings = HaystackCompositePhoneNumberFinder.find(phoneNumber);
+            final List<String> strings = haystackCompositePhoneNumberFinder.find(phoneNumber);
             assertEquals(phoneNumber, 0, strings.size());
         }
     }
@@ -94,7 +94,7 @@ public class HaystackCompositePhoneNumberFinderTest {
     @Test
     public void testFindStringsValidNumbers() {
         final List<String> phoneNumbers = Arrays.asList(VALID_PHONE_NUMBERS);
-        final List<String> strings = HaystackCompositePhoneNumberFinder.find(phoneNumbers);
+        final List<String> strings = haystackCompositePhoneNumberFinder.find(phoneNumbers);
         assertEquals(VALID_PHONE_NUMBERS.length, strings.size());
         final Iterator<String> phoneNumbersIterator = phoneNumbers.iterator();
         final Iterator<String> stringsIterator = strings.iterator();
@@ -106,7 +106,7 @@ public class HaystackCompositePhoneNumberFinderTest {
     @Test
     public void testFindStringsInvalidNumbers() {
         final List<String> phoneNumbers = Arrays.asList(INVALID_US_PHONE_NUMBERS);
-        final List<String> strings = HaystackCompositePhoneNumberFinder.find(phoneNumbers);
+        final List<String> strings = haystackCompositePhoneNumberFinder.find(phoneNumbers);
         assertEquals(0, strings.size());
     }
 
@@ -114,9 +114,9 @@ public class HaystackCompositePhoneNumberFinderTest {
     public void testFindNumberParseException() throws NumberParseException {
         when(mockPhoneNumberUtil.parseAndKeepRawInput(anyString(), anyString())).thenThrow(
                 new NumberParseException(NumberParseException.ErrorType.TOO_LONG, "Test"));
-        HaystackCompositePhoneNumberFinder = new HaystackCompositePhoneNumberFinder(mockPhoneNumberUtil);
+        haystackCompositePhoneNumberFinder = new HaystackCompositePhoneNumberFinder(mockPhoneNumberUtil);
 
-        final List<String> phoneNumbers = HaystackCompositePhoneNumberFinder.find(VALID_PHONE_NUMBERS[0]);
+        final List<String> phoneNumbers = haystackCompositePhoneNumberFinder.find(VALID_PHONE_NUMBERS[0]);
 
         assertTrue(phoneNumbers.isEmpty());
         verify(mockPhoneNumberUtil).parseAndKeepRawInput(VALID_PHONE_NUMBERS[0], "CA");

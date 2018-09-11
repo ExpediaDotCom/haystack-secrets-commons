@@ -19,6 +19,7 @@ package com.expedia.www.haystack.commons.secretDetector;
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
+import com.netflix.servo.util.VisibleForTesting;
 import io.dataapps.chlorine.finder.Finder;
 
 import java.util.ArrayList;
@@ -31,7 +32,8 @@ import java.util.regex.Pattern;
 
 @SuppressWarnings("WeakerAccess")
 public class HaystackCompositePhoneNumberFinder implements Finder {
-    private static final String FINDER_NAME = "PhoneNumber";
+    @VisibleForTesting
+    static final String FINDER_NAME = "Phone_Number";
     private static final Pattern ALPHAS_PATTERN = Pattern.compile("[A-Za-z]+");
     private static final Pattern ALL_NUMBERS_PATTERN = Pattern.compile("^\\d+$");
     private final PhoneNumberUtil phoneNumberUtil;

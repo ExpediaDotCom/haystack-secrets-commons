@@ -73,8 +73,6 @@ public class SpanDetectorTest extends DetectorTestBase {
     private static final String CREDIT_CARD_FINDER_NAME = "Credit_Card";
     private static final String CREDIT_CARD_FINDER_NAME_IN_FINDERS_DEFAULT_DOT_XML = CREDIT_CARD_FINDER_NAME;
     private static final String EMAIL_FINDER_NAME_IN_FINDERS_DEFAULT_DOT_XML = "Email";
-    private static final String IP_FINDER_NAME = NonLocalIpV4AddressFinder.class.getSimpleName()
-            .replace("Finder", "");
     private static final FinderNameAndServiceName FINDER_NAME_AND_SERVICE_NAME
             = new FinderNameAndServiceName(FINDER_NAME, SERVICE_NAME);
 
@@ -172,8 +170,8 @@ public class SpanDetectorTest extends DetectorTestBase {
         final Map<String, List<String>> secrets = spanDetector.findSecrets(IP_ADDRESS_SPAN);
 
         assertEquals(IP_ADDRESS + " should have been flagged as a secret", 1, secrets.size());
-        assertEquals(IP_FINDER_NAME, secrets.keySet().iterator().next());
-        assertEquals(STRING_TAG_KEY, secrets.get(IP_FINDER_NAME).iterator().next());
+        assertEquals(NonLocalIpV4AddressFinder.FINDER_NAME, secrets.keySet().iterator().next());
+        assertEquals(STRING_TAG_KEY, secrets.get(NonLocalIpV4AddressFinder.FINDER_NAME).iterator().next());
         verifiesForFindSecrets(42, 1);
     }
 
