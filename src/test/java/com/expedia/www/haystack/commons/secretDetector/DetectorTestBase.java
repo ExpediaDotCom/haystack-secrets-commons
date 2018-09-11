@@ -45,22 +45,28 @@ public abstract class DetectorTestBase {
                 RegexFinder.class.getName(), "EMAIL", MILLISECONDS);
         Mockito.verify(mockMetricObjects, Mockito.times(wantedNumberOfInvocationsNonEmailFinders))
                 .createAndRegisterBasicTimer(SUBSYSTEM, APPLICATION,
-                        HaystackCompositeCreditCardFinder.class.getName(), "CREDIT_CARD", MILLISECONDS);
+                        HaystackCompositeCreditCardFinder.class.getName(), "CREDIT_CARD",
+                        MILLISECONDS);
         Mockito.verify(mockMetricObjects, Mockito.times(wantedNumberOfInvocationsNonEmailFinders))
                 .createAndRegisterBasicTimer(SUBSYSTEM, APPLICATION,
-                        NonLocalIpV4AddressFinder.class.getName(), "NONLOCALIPV4ADDRESS", MILLISECONDS);
+                        NonLocalIpV4AddressFinder.class.getName(), NonLocalIpV4AddressFinder.FINDER_NAME.toUpperCase(),
+                        MILLISECONDS);
         Mockito.verify(mockMetricObjects, Mockito.times(wantedNumberOfInvocationsNonEmailFinders))
                 .createAndRegisterBasicTimer(SUBSYSTEM, APPLICATION,
-                        RegexFinder.class.getName(), "STREET ADDRESS", MILLISECONDS);
+                        RegexFinder.class.getName(), "STREET ADDRESS",
+                        MILLISECONDS);
         Mockito.verify(mockMetricObjects, Mockito.times(wantedNumberOfInvocationsNonEmailFinders))
                 .createAndRegisterBasicTimer(SUBSYSTEM, APPLICATION,
-                        RegexFinder.class.getName(), "SSN-SPACES", MILLISECONDS);
+                        RegexFinder.class.getName(), "SSN-SPACES",
+                        MILLISECONDS);
         Mockito.verify(mockMetricObjects, Mockito.times(wantedNumberOfInvocationsNonEmailFinders))
                 .createAndRegisterBasicTimer(SUBSYSTEM, APPLICATION,
-                        RegexFinder.class.getName(), "SSN-DASHES", MILLISECONDS);
+                        RegexFinder.class.getName(), "SSN-DASHES",
+                        MILLISECONDS);
         Mockito.verify(mockMetricObjects, Mockito.times(wantedNumberOfInvocationsNonEmailFinders))
                 .createAndRegisterBasicTimer(SUBSYSTEM, APPLICATION,
-                        HaystackPhoneNumberFinder.class.getName(), "PHONENUMBER", MILLISECONDS);
+                        HaystackPhoneNumberFinder.class.getName(), HaystackPhoneNumberFinder.FINDER_NAME.toUpperCase(),
+                        MILLISECONDS);
         Mockito.verify(mockTimer, Mockito.times(wantedNumberOfInvocationsStartAndStop)).start();
         Mockito.verify(mockStopwatch, Mockito.times(wantedNumberOfInvocationsStartAndStop)).stop();
     }

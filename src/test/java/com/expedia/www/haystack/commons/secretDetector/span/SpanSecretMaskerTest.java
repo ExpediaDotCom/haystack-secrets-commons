@@ -22,6 +22,7 @@ import com.expedia.open.tracing.Tag;
 import com.expedia.www.haystack.commons.secretDetector.DetectorTestBase;
 import com.expedia.www.haystack.commons.secretDetector.FinderNameAndServiceName;
 import com.expedia.www.haystack.commons.secretDetector.HaystackFinderEngine;
+import com.expedia.www.haystack.commons.secretDetector.NonLocalIpV4AddressFinder;
 import com.expedia.www.haystack.commons.secretDetector.span.SpanSecretMasker.Factory;
 import com.netflix.servo.monitor.Counter;
 import org.junit.After;
@@ -70,9 +71,8 @@ public class SpanSecretMaskerTest extends DetectorTestBase {
     private static final String EMAIL_FINDER_NAME_IN_FINDERS_DEFAULT_DOT_XML = "Email";
     private static final FinderNameAndServiceName EMAIL_FINDER_NAME_AND_SERVICE_NAME =
             new FinderNameAndServiceName(EMAIL_FINDER_NAME_IN_FINDERS_DEFAULT_DOT_XML, SERVICE_NAME);
-    private static final String IP_FINDER_NAME = "NonLocalIpV4Address";
     private static final FinderNameAndServiceName IPV4_FINDER_NAME_AND_SERVICE_NAME =
-            new FinderNameAndServiceName(IP_FINDER_NAME, SERVICE_NAME);
+            new FinderNameAndServiceName(NonLocalIpV4AddressFinder.FINDER_NAME, SERVICE_NAME);
 
     @Mock
     private Logger mockLogger;
@@ -174,7 +174,7 @@ public class SpanSecretMaskerTest extends DetectorTestBase {
         verify(mockSpanS3ConfigFetcher).isInWhiteList(
                 EMAIL_FINDER_NAME_IN_FINDERS_DEFAULT_DOT_XML, SERVICE_NAME, OPERATION_NAME, BYTES_FIELD_KEY);
         verify(mockSpanS3ConfigFetcher).isInWhiteList(
-                IP_FINDER_NAME, SERVICE_NAME, OPERATION_NAME, STRING_TAG_KEY);
+                NonLocalIpV4AddressFinder.FINDER_NAME, SERVICE_NAME, OPERATION_NAME, STRING_TAG_KEY);
         verify(mockFactory).createCounter(EMAIL_FINDER_NAME_AND_SERVICE_NAME, APPLICATION);
         verify(mockFactory).createCounter(IPV4_FINDER_NAME_AND_SERVICE_NAME, APPLICATION);
         verify(mockCounter, times(3)).increment();
@@ -183,7 +183,7 @@ public class SpanSecretMaskerTest extends DetectorTestBase {
         verify(mockSpanNameAndCountRecorder).add(
                 EMAIL_FINDER_NAME_IN_FINDERS_DEFAULT_DOT_XML, SERVICE_NAME, OPERATION_NAME, BYTES_FIELD_KEY);
         verify(mockSpanNameAndCountRecorder).add(
-                IP_FINDER_NAME, SERVICE_NAME, OPERATION_NAME, STRING_TAG_KEY);
+                NonLocalIpV4AddressFinder.FINDER_NAME, SERVICE_NAME, OPERATION_NAME, STRING_TAG_KEY);
         verifiesForFindSecrets(18, 1);
     }
 

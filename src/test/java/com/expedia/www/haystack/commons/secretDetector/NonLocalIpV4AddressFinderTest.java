@@ -22,6 +22,7 @@ import org.junit.Test;
 
 import java.util.List;
 
+import static com.expedia.www.haystack.commons.secretDetector.NonLocalIpV4AddressFinder.FINDER_NAME;
 import static com.expedia.www.haystack.commons.secretDetector.TestConstantsAndCommonCode.RANDOM;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -102,7 +103,7 @@ public class NonLocalIpV4AddressFinderTest {
 
     @Test
     public void testGetName() {
-        assertEquals(NonLocalIpV4AddressFinder.class.getSimpleName().replace("Finder", ""), nonLocalIpV4AddressFinder.getName());
+        assertEquals(FINDER_NAME, nonLocalIpV4AddressFinder.getName());
     }
 
     @Test

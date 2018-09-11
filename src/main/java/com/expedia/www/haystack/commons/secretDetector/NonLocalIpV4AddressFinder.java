@@ -16,6 +16,7 @@
  */
 package com.expedia.www.haystack.commons.secretDetector;
 
+import com.netflix.servo.util.VisibleForTesting;
 import io.dataapps.chlorine.finder.Finder;
 import io.dataapps.chlorine.pattern.RegexFinder;
 
@@ -32,6 +33,8 @@ import java.util.regex.Pattern;
 public class NonLocalIpV4AddressFinder implements Finder {
     static final Finder IPV4_FINDER = new RegexFinder("IPV4",
             "^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$");
+    @VisibleForTesting
+    public static final String FINDER_NAME = "Non_Local_IpV4_Address";
 
     private final Pattern pattern10Dot = Pattern.compile("(^10\\.)");
     private final Pattern pattern192Dot168 = Pattern.compile("(^192\\.168\\.)");
@@ -39,7 +42,7 @@ public class NonLocalIpV4AddressFinder implements Finder {
 
     @Override
     public String getName() {
-        return "NonLocalIpV4Address";
+        return FINDER_NAME;
     }
 
     @Override
