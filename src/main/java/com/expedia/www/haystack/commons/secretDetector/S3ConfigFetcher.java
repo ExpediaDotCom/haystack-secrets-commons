@@ -30,17 +30,18 @@ import java.util.concurrent.ConcurrentHashMap;
 public class S3ConfigFetcher extends S3ConfigFetcherBase {
     private static final int ITEM_COUNT = 2;
 
-    public S3ConfigFetcher(String bucket, String key) {
-        super(LoggerFactory.getLogger(S3ConfigFetcher.class), bucket, key,
+    public S3ConfigFetcher(Prefix prefix, String bucket, String key) {
+        super(prefix, LoggerFactory.getLogger(S3ConfigFetcher.class), bucket, key,
                 AmazonS3ClientBuilder.standard().withRegion(Regions.US_WEST_2).build(), new SpanFactory(), ITEM_COUNT);
     }
 
-    public S3ConfigFetcher(Logger s3ConfigFetcherLogger,
+    public S3ConfigFetcher(Prefix prefix,
+                           Logger s3ConfigFetcherLogger,
                            WhiteListConfig whiteListConfig,
                            AmazonS3 amazonS3,
                            SpanFactory s3ConfigFetcherFactory) {
-        super(s3ConfigFetcherLogger, whiteListConfig.bucket(), whiteListConfig.key(), amazonS3, s3ConfigFetcherFactory,
-                ITEM_COUNT);
+        super(prefix, s3ConfigFetcherLogger, whiteListConfig.bucket(), whiteListConfig.key(), amazonS3,
+                s3ConfigFetcherFactory, ITEM_COUNT);
     }
 
     public boolean isInWhiteList(String... strings) {
@@ -70,8 +71,8 @@ public class S3ConfigFetcher extends S3ConfigFetcherBase {
         }
 
         @Override
-        public Object createWhiteList() {
-            return new ConcurrentHashMap<String, Set<String>>();
+        public Map<String, Set<String>> createWhiteList() {
+            return new ConcurrentHashMap<>();
         }
     }
 }

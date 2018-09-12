@@ -47,7 +47,7 @@ public class HaystackPhoneNumberFinder implements Finder {
      * All HaystackPhoneNumberFinder instances have the same name, so that the reports and/or metrics when secrets are
      * found aggregates all phone number secrets, regardless of the region in which a phone number matched.
      *
-     * @return the String "PhoneNumber"
+     * @return the String "Phone_Number"
      */
     @SuppressWarnings("SuspiciousGetterSetter")
     @Override

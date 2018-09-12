@@ -19,6 +19,7 @@ package com.expedia.www.haystack.commons.secretDetector.json;
 import com.expedia.www.haystack.commons.secretDetector.DetectorBase;
 import com.expedia.www.haystack.commons.secretDetector.HaystackFinderEngine;
 import com.expedia.www.haystack.commons.secretDetector.S3ConfigFetcher;
+import com.expedia.www.haystack.commons.secretDetector.S3ConfigFetcherBase;
 import com.expedia.www.haystack.metrics.MetricObjects;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -39,7 +40,7 @@ import static com.expedia.www.haystack.commons.config.Configuration.WHITELIST_S3
 public class JsonDetector extends DetectorBase {
     public JsonDetector(String bucket, String subsystem, String application) {
         this(new HaystackFinderEngine(new MetricObjects(), subsystem, application),
-                new S3ConfigFetcher(bucket, WHITELIST_S3_ITEM_NAME));
+                new S3ConfigFetcher(S3ConfigFetcherBase.Prefix.JSON, bucket, WHITELIST_S3_ITEM_NAME));
     }
 
     public JsonDetector(HaystackFinderEngine haystackFinderEngine, S3ConfigFetcher s3ConfigFetcher) {

@@ -1,5 +1,8 @@
 # Release Notes
 
+## 1.0.9 / 2018-09-12 
+Use a prefix to identify that types of items in the whitelist configuration
+
 ## 1.0.8 / 2018-09-11 Time calls to find()
 Use underscore delimited names for finders so that they are more readable in Grafana
 

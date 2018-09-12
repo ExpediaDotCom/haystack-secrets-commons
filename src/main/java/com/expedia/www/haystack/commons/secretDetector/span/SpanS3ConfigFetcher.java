@@ -34,7 +34,7 @@ public class SpanS3ConfigFetcher extends S3ConfigFetcherBase {
     private static final int ITEM_COUNT = 4;
 
     public SpanS3ConfigFetcher(String bucket, String key) {
-        super(LoggerFactory.getLogger(SpanS3ConfigFetcher.class), bucket, key,
+        super(Prefix.SPAN, LoggerFactory.getLogger(SpanS3ConfigFetcher.class), bucket, key,
                 AmazonS3ClientBuilder.standard().withRegion(Regions.US_WEST_2).build(), new SpanFactory(), ITEM_COUNT);
     }
 
@@ -42,8 +42,8 @@ public class SpanS3ConfigFetcher extends S3ConfigFetcherBase {
                                WhiteListConfig whiteListConfig,
                                AmazonS3 amazonS3,
                                SpanFactory s3ConfigFetcherFactory) {
-        super(s3ConfigFetcherLogger, whiteListConfig.bucket(), whiteListConfig.key(), amazonS3, s3ConfigFetcherFactory,
-                ITEM_COUNT);
+        super(Prefix.SPAN, s3ConfigFetcherLogger, whiteListConfig.bucket(), whiteListConfig.key(), amazonS3,
+                s3ConfigFetcherFactory, ITEM_COUNT);
     }
 
     public boolean isInWhiteList(String... strings) {

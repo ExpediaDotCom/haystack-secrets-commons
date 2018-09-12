@@ -42,7 +42,6 @@ import static com.expedia.www.haystack.commons.secretDetector.TestConstantsAndCo
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -109,7 +108,7 @@ public class S3ConfigFetcherTest {
         when(mockWhiteListConfig.bucket()).thenReturn(BUCKET);
         when(mockWhiteListConfig.key()).thenReturn(KEY);
         spanS3ConfigFetcher = new S3ConfigFetcher(
-                mockS3ConfigFetcherLogger, mockWhiteListConfig, mockAmazonS3, mockFactory);
+                null, mockS3ConfigFetcherLogger, mockWhiteListConfig, mockAmazonS3, mockFactory);
     }
 
     @After
@@ -123,16 +122,16 @@ public class S3ConfigFetcherTest {
 
     @Test
     public void testSmallConstructor() {
-        new S3ConfigFetcher(BUCKET, KEY);
+        new S3ConfigFetcher(null, BUCKET, KEY);
     }
 
     @Test
     public void testGetWhiteListItemsOneMillisecondEarly() {
         when(mockFactory.createCurrentTimeMillis()).thenReturn(ONE_HOUR);
 
-        final Map<String, Set<String>> whiteList =
+        @SuppressWarnings("unchecked") final Map<String, Set<String>> whiteList =
                 (Map<String, Set<String>>) spanS3ConfigFetcher.getWhiteListItems();
-        assertNull(whiteList);
+        assertTrue(whiteList.isEmpty());
 
         verify(mockFactory).createCurrentTimeMillis();
     }
@@ -166,7 +165,7 @@ public class S3ConfigFetcherTest {
         whensForGetWhiteListItems();
         when(mockBufferedReader.readLine()).thenReturn(ONE_LINE_OF_GOOD_DATA).thenReturn(null);
 
-        final Map<String, Set<String>> whiteList =
+        @SuppressWarnings("unchecked") final Map<String, Set<String>> whiteList =
                 (Map<String, Set<String>>) spanS3ConfigFetcher.getWhiteListItems();
         assertsForEmptyWhiteList(whiteList, true, 0);
 
@@ -180,7 +179,7 @@ public class S3ConfigFetcherTest {
         whensForGetWhiteListItems();
         when(mockBufferedReader.readLine()).thenThrow(ioException);
 
-        final Map<String, Set<String>> whiteList =
+        @SuppressWarnings("unchecked") final Map<String, Set<String>> whiteList =
                 (Map<String, Set<String>>) spanS3ConfigFetcher.getWhiteListItems();
         assertsForEmptyWhiteList(whiteList, false, MORE_THAN_ONE_HOUR);
 
@@ -194,10 +193,10 @@ public class S3ConfigFetcherTest {
         whensForGetWhiteListItems();
         when(mockBufferedReader.readLine()).thenReturn(ONE_LINE_OF_BAD_DATA, (String) null);
 
-        final Map<String, Set<String>> whiteList =
+        @SuppressWarnings("unchecked") final Map<String, Set<String>> whiteList =
                 (Map<String, Set<String>>) spanS3ConfigFetcher.getWhiteListItems();
-        assertsForEmptyWhiteList(whiteList, false, MORE_THAN_ONE_HOUR);
 
+        assertsForEmptyWhiteList(whiteList, false, MORE_THAN_ONE_HOUR);
         verifiesForGetWhiteListItems(1, 1);
         verify(mockS3ConfigFetcherLogger).error(eq(String.format(INVALID_DATA_MSG, ONE_LINE_OF_BAD_DATA, 1)),
                 any(S3ConfigFetcherBase.InvalidWhitelistItemInputException.class));
@@ -206,7 +205,7 @@ public class S3ConfigFetcherTest {
     private void assertsForEmptyWhiteList(Map<String, Set<String>> whiteList,
                                           boolean isUpdateInProgress,
                                           long lastUpdateTime) {
-        assertNull(whiteList);
+        assertTrue(whiteList.isEmpty());
         assertEquals(lastUpdateTime, spanS3ConfigFetcher.getLastUpdateTimeForTest());
         assertEquals(isUpdateInProgress, spanS3ConfigFetcher.isUpdateInProgressForTest());
     }
@@ -217,8 +216,7 @@ public class S3ConfigFetcherTest {
         when(mockS3Object.getObjectContent()).thenReturn(mockS3ObjectInputStream);
         when(mockFactory.createInputStreamReader(any())).thenReturn(mockInputStreamReader);
         when(mockFactory.createBufferedReader(any())).thenReturn(mockBufferedReader);
-        when(mockFactory.createWhiteList())
-                .thenReturn(new ConcurrentHashMap<String, Set<String>>());
+        when(mockFactory.createWhiteList()).thenReturn(new ConcurrentHashMap<>());
     }
 
     @SuppressWarnings("resource")
@@ -260,8 +258,7 @@ public class S3ConfigFetcherTest {
 
     @Test
     public void testGetWhiteList() {
-        final Map<String, Set<String>> whiteList =
-                (Map<String, Set<String>>) factory.createWhiteList();
+        final Map<String, Set<String>> whiteList = factory.createWhiteList();
         assertNotNull(whiteList);
     }
 }
