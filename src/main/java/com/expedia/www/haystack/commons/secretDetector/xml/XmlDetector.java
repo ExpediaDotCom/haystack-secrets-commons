@@ -19,6 +19,7 @@ package com.expedia.www.haystack.commons.secretDetector.xml;
 import com.expedia.www.haystack.commons.secretDetector.DetectorBase;
 import com.expedia.www.haystack.commons.secretDetector.HaystackFinderEngine;
 import com.expedia.www.haystack.commons.secretDetector.S3ConfigFetcher;
+import com.expedia.www.haystack.commons.secretDetector.S3ConfigFetcherBase.Prefix;
 import com.expedia.www.haystack.metrics.MetricObjects;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -42,7 +43,7 @@ public class XmlDetector extends DetectorBase {
 
     public XmlDetector(String bucket, String subsystem, String application) {
         this(new HaystackFinderEngine(new MetricObjects(), subsystem, application),
-                new S3ConfigFetcher(bucket, WHITELIST_S3_ITEM_NAME));
+                new S3ConfigFetcher(Prefix.XML, bucket, WHITELIST_S3_ITEM_NAME));
     }
 
     public XmlDetector(HaystackFinderEngine haystackFinderEngine, S3ConfigFetcher s3ConfigFetcher) {

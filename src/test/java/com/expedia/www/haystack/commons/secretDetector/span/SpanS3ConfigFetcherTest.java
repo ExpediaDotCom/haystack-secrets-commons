@@ -37,6 +37,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static com.expedia.www.haystack.commons.secretDetector.S3ConfigFetcherBase.Prefix.SPAN;
+import static com.expedia.www.haystack.commons.secretDetector.S3ConfigFetcherBase.Prefix.XML;
 import static com.expedia.www.haystack.commons.secretDetector.S3ConfigFetcherBase.SUCCESSFUL_WHITELIST_UPDATE_MSG;
 import static com.expedia.www.haystack.commons.secretDetector.TestConstantsAndCommonCode.RANDOM;
 import static com.expedia.www.haystack.commons.secretDetector.span.SpanS3ConfigFetcher.ERROR_MESSAGE;
@@ -65,17 +67,20 @@ public class SpanS3ConfigFetcherTest {
     private static final String OPERATION_NAME = "OperationName";
     private static final String TAG_NAME = "TagName";
     private static final String COMMENT = "Comment";
-    private static final String ONE_LINE_OF_GOOD_DATA = String.format("%s;%s;%s;%s;%s",
-            FINDER_NAME, SERVICE_NAME, OPERATION_NAME, TAG_NAME, COMMENT);
+    private static final String GOOD_DATA_FORMAT_STRING = "%s;%s;%s;%s;%s;%s";
+    private static final String ONE_LINE_OF_GOOD_DATA_SPAN = String.format(GOOD_DATA_FORMAT_STRING,
+            SPAN, FINDER_NAME, SERVICE_NAME, OPERATION_NAME, TAG_NAME, COMMENT);
     private static final SpanWhiteListItem SPAN_WHITE_LIST_ITEM =
             new SpanWhiteListItem(FINDER_NAME, SERVICE_NAME, OPERATION_NAME, TAG_NAME);
     private static final String SECOND_FINDER_NAME = "SecondFinderName";
-    private static final String SECOND_LINE_OF_GOOD_DATA = String.format("%s;%s;%s;%s;%s",
-            SECOND_FINDER_NAME, SERVICE_NAME, OPERATION_NAME, TAG_NAME, COMMENT);
+    private static final String SECOND_LINE_OF_GOOD_DATA_SPAN = String.format(GOOD_DATA_FORMAT_STRING,
+            SPAN, SECOND_FINDER_NAME, SERVICE_NAME, OPERATION_NAME, TAG_NAME, COMMENT);
+    private static final String THIRD_LINE_OF_GOOD_DATA_XML = String.format(GOOD_DATA_FORMAT_STRING,
+            XML, SECOND_FINDER_NAME, SERVICE_NAME, OPERATION_NAME, TAG_NAME, COMMENT);
     private static final SpanWhiteListItem SECOND_SPAN_WHITE_LIST_ITEM =
             new SpanWhiteListItem(SECOND_FINDER_NAME, SERVICE_NAME, OPERATION_NAME, TAG_NAME);
-    private static final String ONE_LINE_OF_BAD_DATA = String.format("%s;%s;%s",
-            FINDER_NAME, SERVICE_NAME, OPERATION_NAME);
+    private static final String ONE_LINE_OF_BAD_DATA = String.format("%s;%s;%s;%s",
+            SPAN, FINDER_NAME, SERVICE_NAME, OPERATION_NAME);
     private static final String MISSING_FINDER_NAME = "MissingFinderName";
     private static final String MISSING_SERVICE_NAME = "MissingServiceName";
 
@@ -144,8 +149,8 @@ public class SpanS3ConfigFetcherTest {
     public void testGetWhiteListItemsSuccessfulFetch() throws IOException {
         wantedNumberOfInvocationsCreateWhiteList = 2;
         whensForGetWhiteListItems();
-        when(mockBufferedReader.readLine()).thenReturn(ONE_LINE_OF_GOOD_DATA)
-                .thenReturn(SECOND_LINE_OF_GOOD_DATA, (String) null);
+        when(mockBufferedReader.readLine()).thenReturn(
+                ONE_LINE_OF_GOOD_DATA_SPAN, SECOND_LINE_OF_GOOD_DATA_SPAN, THIRD_LINE_OF_GOOD_DATA_XML, null);
         when(mockFactory.createWhiteListItem(Matchers.<String>anyVararg()))
                 .thenReturn(SPAN_WHITE_LIST_ITEM, SECOND_SPAN_WHITE_LIST_ITEM);
 
@@ -159,7 +164,7 @@ public class SpanS3ConfigFetcherTest {
         assertEquals(MORE_THAN_ONE_HOUR, spanS3ConfigFetcher.getLastUpdateTimeForTest());
         assertFalse(spanS3ConfigFetcher.isUpdateInProgressForTest());
 
-        verifiesForGetWhiteListItems(3, 6);
+        verifiesForGetWhiteListItems(4, 6);
         verify(mockFactory).createWhiteListItem(FINDER_NAME, SERVICE_NAME, OPERATION_NAME, TAG_NAME, COMMENT);
         verify(mockFactory).createWhiteListItem(SECOND_FINDER_NAME, SERVICE_NAME, OPERATION_NAME, TAG_NAME, COMMENT);
         verify(mockS3ConfigFetcherLogger).info(SUCCESSFUL_WHITELIST_UPDATE_MSG);
@@ -169,7 +174,7 @@ public class SpanS3ConfigFetcherTest {
     public void testGetWhiteListItemsUpdateInProgress() throws IOException {
         spanS3ConfigFetcher.setUpdateInProgressForTest(true);
         whensForGetWhiteListItems();
-        when(mockBufferedReader.readLine()).thenReturn(ONE_LINE_OF_GOOD_DATA).thenReturn(null);
+        when(mockBufferedReader.readLine()).thenReturn(ONE_LINE_OF_GOOD_DATA_SPAN).thenReturn(null);
 
         final Object whiteList = spanS3ConfigFetcher.getWhiteListItems();
         assertsForEmptyWhiteList(whiteList, true, 0L);
@@ -201,7 +206,7 @@ public class SpanS3ConfigFetcherTest {
         assertsForEmptyWhiteList(whiteList, false, MORE_THAN_ONE_HOUR);
 
         verifiesForGetWhiteListItems(1, 1);
-        verify(mockS3ConfigFetcherLogger).error(eq(String.format(INVALID_DATA_MSG, ONE_LINE_OF_BAD_DATA, 3)),
+        verify(mockS3ConfigFetcherLogger).error(eq(String.format(INVALID_DATA_MSG, ONE_LINE_OF_BAD_DATA, 4)),
                 any(S3ConfigFetcherBase.InvalidWhitelistItemInputException.class));
     }
 
