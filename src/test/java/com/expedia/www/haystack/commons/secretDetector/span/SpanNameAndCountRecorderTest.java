@@ -26,7 +26,7 @@ import org.slf4j.Logger;
 
 import java.time.Clock;
 
-import static com.expedia.www.haystack.commons.secretDetector.span.SpanNameAndCountRecorder.CONFIDENTIAL_DATA_LOCATIONS;
+import static com.expedia.www.haystack.commons.secretDetector.span.SpanNameAndCountRecorder.CONFIDENTIAL_DATA_LOCATIONS_SIZE;
 import static com.expedia.www.haystack.commons.secretDetector.span.SpanNameAndCountRecorder.ONE_HOUR;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.times;
@@ -90,65 +90,8 @@ public class SpanNameAndCountRecorderTest {
 
     @Test
     public void testToString() {
-        final String expected = getDenselyPopulatedLogString(16);
-        assertEquals(expected, spanNameAndCountRecorder.toString());
-        verify(mockClock, times(countOfAddCalls)).millis();
-    }
-
-    @Test
-    public void testClearBecauseOneHourHasPassed() {
-        when(mockClock.millis()).thenReturn(ONE_HOUR + 1);
-        add(F1, S1, O1, T1);
-        assertEquals(getSparselyPopulatedLogString(0), spanNameAndCountRecorder.toString());
-        verify(mockClock, times(countOfAddCalls)).millis();
-        verify(mockLogger).info(String.format(CONFIDENTIAL_DATA_LOCATIONS, getDenselyPopulatedLogString(17)));
-    }
-
-    @Test
-    public void testLogIfTimeToLogAddAndGetOneHour() {
-        final long now = System.currentTimeMillis();
-        when(mockClock.millis()).thenReturn(now + ONE_HOUR, now + 1 + (2 * ONE_HOUR));
-        add(F1, S1, O1, T1);
-        verify(mockLogger).info(String.format(CONFIDENTIAL_DATA_LOCATIONS, getDenselyPopulatedLogString(17)));
-        add(F1, S1, O1, T1);
-        verify(mockLogger).info(String.format(CONFIDENTIAL_DATA_LOCATIONS, getSparselyPopulatedLogString(1)));
-        verify(mockClock, times(countOfAddCalls)).millis();
-    }
-
-    @Test
-    public void testLogIfTimeToLogInnerCheckNotTimeYet() {
-        spanNameAndCountRecorder.logIfTimeToLogInnerCheck(0L);
-        verify(mockClock, times(countOfAddCalls)).millis();
-    }
-
-    private void add(String finderName, String serviceName, String operationName, String tagKey) {
-        spanNameAndCountRecorder.add(finderName, serviceName, operationName, tagKey);
-        ++countOfAddCalls;
-    }
-
-    private static String getSparselyPopulatedLogString(int f1S1O1T1Count) {
-        return String.format(FORMAT,
-                F1, S1, O1, T1, f1S1O1T1Count,
-                F1, S1, O1, T2, 0,
-                F1, S1, O2, T1, 0,
-                F1, S1, O2, T2, 0,
-                F1, S2, O1, T1, 0,
-                F1, S2, O1, T2, 0,
-                F1, S2, O2, T1, 0,
-                F1, S2, O2, T2, 0,
-                F2, S1, O1, T1, 0,
-                F2, S1, O1, T2, 0,
-                F2, S1, O2, T1, 0,
-                F2, S1, O2, T2, 0,
-                F2, S2, O1, T1, 0,
-                F2, S2, O1, T2, 0,
-                F2, S2, O2, T1, 0,
-                F2, S2, O2, T2, 0);
-    }
-
-    private static String getDenselyPopulatedLogString(int f1S1O1T1Count) {
-        return String.format(FORMAT,
-                F1, S1, O1, T1, f1S1O1T1Count,
+        final String expected = String.format(FORMAT,
+                F1, S1, O1, T1, 16,
                 F1, S1, O1, T2, 15,
                 F1, S1, O2, T1, 14,
                 F1, S1, O2, T2, 13,
@@ -164,5 +107,38 @@ public class SpanNameAndCountRecorderTest {
                 F2, S2, O1, T2, 3,
                 F2, S2, O2, T1, 2,
                 F2, S2, O2, T2, 1);
+        assertEquals(expected, spanNameAndCountRecorder.toString());
+        verify(mockClock, times(countOfAddCalls)).millis();
     }
+
+    @Test
+    public void testClearBecauseOneHourHasPassed() {
+        when(mockClock.millis()).thenReturn(ONE_HOUR + 1);
+        add(F1, S1, O1, T1);
+        verify(mockClock, times(countOfAddCalls)).millis();
+        verify(mockLogger).info(String.format(CONFIDENTIAL_DATA_LOCATIONS_SIZE, 16));
+    }
+
+    @Test
+    public void testLogIfTimeToLogAddAndGetOneHour() {
+        final long now = System.currentTimeMillis();
+        when(mockClock.millis()).thenReturn(now + ONE_HOUR, now + 1 + (2 * ONE_HOUR));
+        add(F1, S1, O1, T1);
+        verify(mockLogger).info(String.format(CONFIDENTIAL_DATA_LOCATIONS_SIZE, 16));
+        add(F1, S1, O1, T1);
+        verify(mockLogger, times(2)).info(String.format(CONFIDENTIAL_DATA_LOCATIONS_SIZE, 16));
+        verify(mockClock, times(countOfAddCalls)).millis();
+    }
+
+    @Test
+    public void testLogIfTimeToLogInnerCheckNotTimeYet() {
+        spanNameAndCountRecorder.logIfTimeToLogInnerCheck(0L);
+        verify(mockClock, times(countOfAddCalls)).millis();
+    }
+
+    private void add(String finderName, String serviceName, String operationName, String tagKey) {
+        spanNameAndCountRecorder.add(finderName, serviceName, operationName, tagKey);
+        ++countOfAddCalls;
+    }
+
 }
