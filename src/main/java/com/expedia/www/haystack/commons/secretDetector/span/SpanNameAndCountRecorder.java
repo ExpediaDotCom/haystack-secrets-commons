@@ -40,7 +40,7 @@ public class SpanNameAndCountRecorder {
     @VisibleForTesting
     static final long ONE_HOUR = TimeUnit.HOURS.toMillis(1);
     @VisibleForTesting
-    static final String CONFIDENTIAL_DATA_LOCATIONS = "Confidential data locations: %s";
+    static final String CONFIDENTIAL_DATA_LOCATIONS_SIZE = "Confidential data locations size: %d";
 
     //            FinderName, ServiceName, OperationName, TagName, Count
     private final Map<String, Map<String, Map<String, Map<String, AtomicInteger>>>> map = new ConcurrentHashMap<>();
@@ -80,7 +80,7 @@ public class SpanNameAndCountRecorder {
         // Checking again inside the synchronized block ensures that the map is only logged once
         if (now > (lastLogTimeMS.get() + ONE_HOUR)) {
             final Set<String> set = loop(new TreeSet<>(), toStringAction, clearAction);
-            logger.info(String.format(CONFIDENTIAL_DATA_LOCATIONS, set));
+            logger.info(String.format(CONFIDENTIAL_DATA_LOCATIONS_SIZE, set.size()));
             if(lastLogTimeMS.get() == 0) {
                 lastLogTimeMS.set(now);
             } else {
